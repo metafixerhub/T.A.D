@@ -1,5 +1,5 @@
 import React from 'react';
-import { Facebook, Twitter, Instagram, Youtube, Linkedin } from 'lucide-react';
+import { FacebookIcon as Facebook, TwitterIcon as Twitter, InstagramIcon as Instagram, YoutubeIcon as Youtube, LinkedinIcon as Linkedin } from './icons';
 
 const Footer = () => {
   return (

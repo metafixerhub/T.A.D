@@ -1,5 +1,6 @@
 import React from 'react';
-import { Linkedin, Github, Youtube, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
+import { LinkedinIcon as Linkedin, GithubIcon as Github, YoutubeIcon as Youtube } from './icons';
 
 const TeachersSection = () => {
   return (
