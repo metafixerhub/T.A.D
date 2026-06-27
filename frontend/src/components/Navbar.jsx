@@ -24,7 +24,7 @@ const Navbar = () => {
           
           {showDownloads && (
             <div style={styles.dropdown}>
-              <a href="#" target="_blank" rel="noreferrer" style={styles.dropdownItem}>
+              <a href="https://antigravity.google/download" target="_blank" rel="noreferrer" style={styles.dropdownItem}>
                 <span>Antigravity</span>
                 <button className="btn-primary" style={styles.smallBtn}>Download</button>
               </a>
