@@ -1,21 +1,34 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import LoginBar from './components/LoginBar';
 import Footer from './components/Footer';
+import Certificate from './components/Certificate';
 
-function App() {
+function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar onLoginClick={() => setIsLoginOpen(true)} />
       <main className="content-wrapper" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <HeroSection />
+        <Routes>
+          <Route path="/" element={<HeroSection />} />
+          <Route path="/certificat" element={<Certificate />} />
+        </Routes>
       </main>
       <Footer />
       <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 

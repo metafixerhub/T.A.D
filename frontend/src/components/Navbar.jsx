@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
-import { Download, LogIn } from 'lucide-react';
+import { Download, LogIn, Award } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Navbar = ({ onLoginClick }) => {
   const [showDownloads, setShowDownloads] = useState(false);
 
   return (
     <nav style={styles.navbar}>
-      <div style={styles.logoContainer}>
+      <Link to="/" style={styles.logoContainer}>
         <img src="/logo.png" alt="Logo" style={styles.logo} onError={(e) => { e.target.style.display = 'none' }} />
         <span style={styles.brandName}>TRAINING AND<br/><span style={{fontSize:'0.8rem', color:'#b0c4de'}}>DEVELOPMENT</span></span>
-      </div>
+      </Link>
       
       <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
+        
+        {/* Certificate Link */}
+        <Link to="/certificat" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00e676', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
+          <Award size={16} /> Certificate
+        </Link>
+
         {/* Downloads Dropdown */}
         <div 
           style={{ position: 'relative' }} 
