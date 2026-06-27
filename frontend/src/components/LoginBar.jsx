@@ -24,31 +24,25 @@ const LoginBar = () => {
   };
 
   return (
-    <section className="container" style={{ padding: '0 20px', marginTop: '-30px', position: 'relative', zIndex: 10 }}>
-      <div className="glass-card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '20px', border: '1px solid rgba(30, 136, 229, 0.5)', background: 'rgba(0, 20, 40, 0.8)' }}>
-        
-        {/* Left Side: Text */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ background: 'rgba(30, 136, 229, 0.2)', padding: '15px', borderRadius: '12px', color: '#1e88e5' }}>
+    <section className="container" style={{ display: 'flex', justifyContent: 'center', paddingBottom: '100px', marginTop: '-40px' }}>
+      <div className="glass-card" style={{ maxWidth: '400px', width: '100%', border: '1px solid rgba(30, 136, 229, 0.5)', background: 'rgba(0, 20, 40, 0.8)', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <div style={{ background: 'rgba(30, 136, 229, 0.2)', padding: '15px', borderRadius: '50%', color: '#1e88e5' }}>
             <Lock size={32} />
           </div>
-          <div>
-            <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>Access All Recordings</h3>
-            <p style={{ margin: 0, color: '#b0c4de', fontSize: '0.9rem' }}>Login to access course recordings, materials & premium content.</p>
-          </div>
         </div>
+        <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '20px' }}>Login to Access</h3>
 
-        {/* Right Side: Form */}
-        <form onSubmit={handleLogin} style={{ display: 'flex', gap: '15px', flexGrow: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <input 
             type="email" 
             placeholder="Enter Email" 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(0, 0, 0, 0.5)', color: 'white', flexGrow: 1, maxWidth: '250px' }}
+            style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(0, 0, 0, 0.5)', color: 'white', width: '100%' }}
             required
           />
-          <div style={{ position: 'relative', flexGrow: 1, maxWidth: '250px' }}>
+          <div style={{ position: 'relative', width: '100%' }}>
             <input 
               type={showPassword ? "text" : "password"} 
               placeholder="Password" 
@@ -66,15 +60,12 @@ const LoginBar = () => {
             </button>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '12px 40px' }}>
-              {loading ? 'LOGGING IN...' : 'LOGIN'}
-            </button>
-            <span style={{ fontSize: '0.75rem', color: '#b0c4de', textAlign: 'center', cursor: 'pointer' }}>Forgot Password?</span>
-          </div>
+          <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '12px', width: '100%' }}>
+            {loading ? 'LOGGING IN...' : 'LOGIN'}
+          </button>
+          
+          {error && <div style={{ color: '#ff4444', fontSize: '0.9rem', marginTop: '10px' }}>{error}</div>}
         </form>
-
-        {error && <div style={{ width: '100%', color: '#ff4444', fontSize: '0.9rem', textAlign: 'right', marginTop: '-10px' }}>{error}</div>}
       </div>
     </section>
   );

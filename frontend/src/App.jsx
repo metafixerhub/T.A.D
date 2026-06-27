@@ -1,30 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Navbar from './components/Navbar';
-import CyberBackground from './components/CyberBackground';
 import HeroSection from './components/HeroSection';
 import LoginBar from './components/LoginBar';
-import FeaturesGrid from './components/FeaturesGrid';
-import Roadmap from './components/Roadmap';
-import TeachersSection from './components/TeachersSection';
-import StatsBar from './components/StatsBar';
 import Footer from './components/Footer';
 
 function App() {
   return (
-    <>
-      <CyberBackground />
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
-      
-      <main className="content-wrapper">
+      <main className="content-wrapper" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <HeroSection />
         <LoginBar />
-        <FeaturesGrid />
-        <Roadmap />
-        <TeachersSection />
-        <StatsBar />
-        <Footer />
       </main>
-    </>
+      <Footer />
+    </div>
   );
 }
 
