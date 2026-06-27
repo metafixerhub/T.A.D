@@ -8,7 +8,7 @@ const HeroSection = () => {
         <Shield size={16} /> SECURE THE FUTURE
       </div>
       <h1 style={{ fontSize: '3.5rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '24px' }}>
-        Master Cyber Security & <span className="text-cyan">Coding Systems</span>
+        ᴍᴀꜱᴛᴇʀ ᴄʏʙᴇʀ ꜱᴇᴄᴜʀɪᴛʏ & <span className="text-cyan">ᴄᴏᴅɪɴɢ ꜱʏꜱᴛᴇᴍꜱ</span>
       </h1>
       <p style={{ color: '#b0c4de', fontSize: '1.2rem', margin: '0 auto 40px auto', maxWidth: '600px' }}>
         Access all course materials, premium recordings, and interactive live sessions from our secure portal.
