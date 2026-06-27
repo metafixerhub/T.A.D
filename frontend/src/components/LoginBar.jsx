@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Lock, Eye, EyeOff, X } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 
-const LoginBar = () => {
+const LoginBar = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  if (!isOpen) return null;
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,6 +19,7 @@ const LoginBar = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert('Successfully logged in!');
+      onClose(); // Close modal on success
     } catch (err) {
       setError('Invalid email or password. Check Firebase Config.');
     }
@@ -24,8 +27,13 @@ const LoginBar = () => {
   };
 
   return (
-    <section className="container" style={{ display: 'flex', justifyContent: 'center', paddingBottom: '100px', marginTop: '-40px' }}>
-      <div className="glass-card" style={{ maxWidth: '400px', width: '100%', border: '1px solid rgba(30, 136, 229, 0.5)', background: 'rgba(0, 20, 40, 0.8)', textAlign: 'center' }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 999, display: 'flex', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(5px)' }}>
+      <div className="glass-card" style={{ position: 'relative', maxWidth: '400px', width: '100%', margin: '20px', border: '1px solid rgba(30, 136, 229, 0.5)', background: 'rgba(0, 20, 40, 0.95)', textAlign: 'center', padding: '40px 30px' }}>
+        
+        <button onClick={onClose} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', color: '#b0c4de', cursor: 'pointer' }}>
+          <X size={24} />
+        </button>
+
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
           <div style={{ background: 'rgba(30, 136, 229, 0.2)', padding: '15px', borderRadius: '50%', color: '#1e88e5' }}>
             <Lock size={32} />
@@ -67,7 +75,7 @@ const LoginBar = () => {
           {error && <div style={{ color: '#ff4444', fontSize: '0.9rem', marginTop: '10px' }}>{error}</div>}
         </form>
       </div>
-    </section>
+    </div>
   );
 };
 

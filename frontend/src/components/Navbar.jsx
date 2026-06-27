@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, LogIn } from 'lucide-react';
 
-const Navbar = () => {
+const Navbar = ({ onLoginClick }) => {
   const [showDownloads, setShowDownloads] = useState(false);
 
   return (
@@ -40,7 +40,9 @@ const Navbar = () => {
           )}
         </div>
 
-        <a href="mailto:contact@training.com" style={styles.contactLink}>Contact Support</a>
+        <button onClick={onLoginClick} className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 20px', borderRadius: '4px' }}>
+          <LogIn size={16} /> LOGIN
+        </button>
       </div>
     </nav>
   );
@@ -69,12 +71,6 @@ const styles = {
     fontSize: '1.1rem',
     fontWeight: 'bold',
     lineHeight: 1.1
-  },
-  contactLink: {
-    color: '#00ffff',
-    textDecoration: 'none',
-    fontSize: '0.9rem',
-    fontWeight: 600
   },
   downloadToggle: {
     color: '#fff',
