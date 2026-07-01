@@ -5,6 +5,7 @@ import HeroSection from './components/HeroSection';
 import LoginBar from './components/LoginBar';
 import Footer from './components/Footer';
 import Certificate from './components/Certificate';
+import LiveSession from './components/LiveSession';
 
 function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -16,6 +17,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<HeroSection />} />
           <Route path="/certificat" element={<Certificate />} />
+          <Route path="/live" element={<LiveSession />} />
         </Routes>
       </main>
       <Footer />

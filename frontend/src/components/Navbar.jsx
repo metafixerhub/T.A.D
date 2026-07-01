@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, LogIn, Award } from 'lucide-react';
+import { Download, LogIn, Award, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Navbar = ({ onLoginClick }) => {
@@ -14,6 +14,11 @@ const Navbar = ({ onLoginClick }) => {
       
       <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
         
+        {/* Live Session Link */}
+        <Link to="/live" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
+          <Video size={16} /> Live Session
+        </Link>
+
         {/* Certificate Link */}
         <Link to="/certificat" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
           <Award size={16} /> Certificate
