@@ -9,13 +9,13 @@ const Navbar = ({ onLoginClick }) => {
     <nav style={styles.navbar}>
       <Link to="/" style={styles.logoContainer}>
         <img src="/logo.png" alt="Logo" style={styles.logo} onError={(e) => { e.target.style.display = 'none' }} />
-        <span style={styles.brandName}>TRAINING AND<br/><span style={{fontSize:'0.8rem', color:'#b0c4de'}}>DEVELOPMENT</span></span>
+        <span style={styles.brandName}>TRAINING AND<br/><span style={{fontSize:'0.8rem', color:'#6b7280'}}>DEVELOPMENT</span></span>
       </Link>
       
       <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
         
         {/* Certificate Link */}
-        <Link to="/certificat" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00e676', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
+        <Link to="/certificat" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
           <Award size={16} /> Certificate
         </Link>
 
@@ -61,26 +61,27 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '20px 40px',
-    background: 'transparent',
-    borderBottom: '1px solid rgba(0, 255, 255, 0.1)',
+    background: '#ffffff',
+    borderBottom: '1px solid #e5e7eb',
   },
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
+    textDecoration: 'none',
   },
   logo: {
     height: '40px',
     objectFit: 'contain'
   },
   brandName: {
-    color: '#1e88e5',
+    color: '#1f2937',
     fontSize: '1.1rem',
     fontWeight: 'bold',
     lineHeight: 1.1
   },
   downloadToggle: {
-    color: '#fff',
+    color: '#374151',
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
@@ -94,13 +95,13 @@ const styles = {
     top: '100%',
     right: 0,
     width: '280px',
-    background: 'rgba(0, 15, 30, 0.95)',
-    border: '1px solid rgba(0, 255, 255, 0.2)',
+    background: '#ffffff',
+    border: '1px solid #e5e7eb',
     borderRadius: '8px',
     padding: '10px 0',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
     zIndex: 50,
   },
   dropdownItem: {
@@ -108,7 +109,7 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '12px 20px',
-    color: '#b0c4de',
+    color: '#4b5563',
     textDecoration: 'none',
     fontSize: '0.9rem',
     transition: 'background 0.2s ease',

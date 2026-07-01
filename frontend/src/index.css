@@ -8,20 +8,9 @@
   color: #b0c4de;
   /* Colors from Mockup */
   --bg-color: #030b14;
-  --bg-glass: rgba(3, 11, 20, 0.75);
-  --primary-cyan: #00ffff;
-  --primary-blue: #1e88e5;
-  --primary-green: #00e676;
-  --card-bg: rgba(4, 20, 40, 0.6);
-  --card-border: rgba(0, 255, 255, 0.15);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
+  color-scheme: light;
+  color: #1f2937; /* Dark charcoal text */
+  background-color: #f9fafb; /* Soft off-white */
 }
 
 body {
@@ -30,80 +19,75 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
-  background-color: var(--bg-color);
+  background-color: #f9fafb;
 }
 
-/* Glassmorphism Cards */
+/* Colors */
+.text-cyan { color: #2563eb; } /* Blue instead of cyan for light theme */
+.text-green { color: #16a34a; } /* Darker green */
+
+/* Components */
 .glass-card {
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  padding: 24px;
-  transition: all 0.3s ease;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
 }
 
-.glass-card:hover {
-  border-color: rgba(0, 255, 255, 0.4);
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
-  transform: translateY(-2px);
-}
-
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  color: #ffffff;
-  margin: 0 0 1rem 0;
-}
-
-.text-cyan { color: var(--primary-cyan); }
-.text-green { color: var(--primary-green); }
-
-/* Buttons */
 .btn-primary {
-  background: var(--primary-blue);
+  background: #2563eb;
   color: white;
   border: none;
-  padding: 12px 28px;
+  padding: 10px 24px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1);
 }
 
 .btn-primary:hover {
-  background: #1565c0;
-  box-shadow: 0 0 15px rgba(30, 136, 229, 0.4);
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.1);
 }
 
 .btn-outline {
   background: transparent;
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 12px 28px;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 10px 24px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1rem;
+  transition: all 0.2s ease;
 }
 
 .btn-outline:hover {
-  border-color: white;
-  background: rgba(255, 255, 255, 0.1);
+  background: #f3f4f6;
+  border-color: #9ca3af;
 }
 
 /* Layout Utilities */
 .container {
-  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
 }
 
 .section-padding {
-  padding: 60px 0;
+  padding: 80px 0;
+}
+
+/* Base Inputs */
+input {
+  font-family: inherit;
+  outline: none;
+}
+input:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
 }
 
 .flex-center {
