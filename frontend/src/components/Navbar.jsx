@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, LogIn, Award, Video } from 'lucide-react';
+import { Download, LogIn, Award, Video, HelpCircle, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Navbar = ({ onLoginClick }) => {
@@ -12,15 +12,25 @@ const Navbar = ({ onLoginClick }) => {
         <span style={styles.brandName}>TRAINING AND<br/><span style={{fontSize:'0.8rem', color:'#6b7280'}}>DEVELOPMENT</span></span>
       </Link>
       
-      <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
         
         {/* Live Session Link */}
-        <Link to="/live" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
+        <Link to="/live" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
           <Video size={16} /> Live Session
         </Link>
 
+        {/* Quiz Link */}
+        <Link to="/quiz" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8b5cf6', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
+          <HelpCircle size={16} /> Quiz
+        </Link>
+
+        {/* Leaderboard Link */}
+        <Link to="/leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#eab308', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
+          <Trophy size={16} /> Leaderboard
+        </Link>
+
         {/* Certificate Link */}
-        <Link to="/certificat" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
+        <Link to="/certificat" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2563eb', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
           <Award size={16} /> Certificate
         </Link>
 

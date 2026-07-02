@@ -6,6 +6,8 @@ import LoginBar from './components/LoginBar';
 import Footer from './components/Footer';
 import Certificate from './components/Certificate';
 import LiveSession from './components/LiveSession';
+import Quiz from './components/Quiz';
+import Leaderboard from './components/Leaderboard';
 
 function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -18,6 +20,8 @@ function AppContent() {
           <Route path="/" element={<HeroSection />} />
           <Route path="/certificat" element={<Certificate />} />
           <Route path="/live" element={<LiveSession />} />
+          <Route path="/quiz" element={<Quiz />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
         </Routes>
       </main>
       <Footer />
