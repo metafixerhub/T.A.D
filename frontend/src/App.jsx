@@ -11,16 +11,25 @@ import Leaderboard from './components/Leaderboard';
 import Materials from './components/Materials';
 import Dashboard from './components/Dashboard';
 
+import DashboardHome from './components/DashboardHome';
+
 function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const location = useLocation();
-  const isDashboard = location.pathname === '/dashboard';
+  const isDashboard = location.pathname.startsWith('/dashboard');
 
   if (isDashboard) {
     return (
       <>
         <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />}>
+            <Route index element={<DashboardHome />} />
+            <Route path="live" element={<LiveSession />} />
+            <Route path="practice" element={<Quiz />} />
+            <Route path="leaderboard" element={<Leaderboard />} />
+            <Route path="materials" element={<Materials />} />
+            <Route path="certificate" element={<Certificate />} />
+          </Route>
         </Routes>
         <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
       </>
@@ -33,11 +42,6 @@ function AppContent() {
       <main className="content-wrapper" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <Routes>
           <Route path="/" element={<HeroSection />} />
-          <Route path="/certificat" element={<Certificate />} />
-          <Route path="/live" element={<LiveSession />} />
-          <Route path="/practice" element={<Quiz />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/materials" element={<Materials />} />
         </Routes>
       </main>
       <Footer />
