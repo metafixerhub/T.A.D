@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
-import { storage, firestore } from '../firebaseConfig';
 import { FileText, Upload, DownloadCloud, Settings, Lock } from 'lucide-react';
+
+// When deploying to Render, the environment variable REACT_APP_BACKEND_URL should be set to your Render URL.
+const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000/api';
 
 const Materials = () => {
   const [materials, setMaterials] = useState([]);
@@ -14,7 +14,6 @@ const Materials = () => {
   const [passcode, setPasscode] = useState('');
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -24,18 +23,13 @@ const Materials = () => {
   const fetchMaterials = async () => {
     setLoading(true);
     try {
-      const q = query(collection(firestore, 'materials'), orderBy('timestamp', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const fetched = [];
-      querySnapshot.forEach((doc) => fetched.push({ id: doc.id, ...doc.data() }));
-      setMaterials(fetched);
+      const response = await fetch(`${API_URL}/materials`);
+      if (!response.ok) throw new Error("Failed to fetch");
+      const data = await response.json();
+      setMaterials(data);
     } catch (err) {
       console.error(err);
-      if (err.message.includes('index')) {
-        setError('Firestore Index required. Check console for link.');
-      } else {
-        setError('Failed to fetch materials. Make sure Firestore rules allow reading.');
-      }
+      setError('Failed to fetch materials from the server. Make sure the Node.js backend is running.');
     }
     setLoading(false);
   };
@@ -45,38 +39,27 @@ const Materials = () => {
     if (!file || !title) return alert('Please select a file and enter a title.');
 
     setUploading(true);
-    const storageRef = ref(storage, `materials/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', title);
 
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(progress);
-      },
-      (error) => {
-        console.error(error);
-        alert('Upload failed: ' + error.message);
-        setUploading(false);
-      },
-      async () => {
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        
-        await addDoc(collection(firestore, 'materials'), {
-          title,
-          fileName: file.name,
-          url: downloadURL,
-          size: file.size,
-          timestamp: Date.now()
-        });
-
-        alert('Material uploaded successfully!');
-        setFile(null);
-        setTitle('');
-        setUploadProgress(0);
-        setUploading(false);
-        fetchMaterials(); // refresh list
-      }
-    );
+    try {
+      const response = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error("Upload failed");
+      
+      alert('Material uploaded successfully!');
+      setFile(null);
+      setTitle('');
+      fetchMaterials(); // refresh list
+    } catch (err) {
+      console.error(err);
+      alert('Upload failed: ' + err.message);
+    }
+    setUploading(false);
   };
 
   return (
@@ -96,12 +79,12 @@ const Materials = () => {
               {materials.length === 0 ? (
                 <p style={{ color: '#6b7280', fontSize: '1.1rem' }}>No materials have been uploaded yet.</p>
               ) : materials.map(mat => (
-                <div key={mat.id} style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={mat._id} style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <h3 style={{ margin: '0 0 5px 0', color: '#1f2937', fontSize: '1.2rem' }}>{mat.title}</h3>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: '0.85rem' }}>{mat.fileName} • {(mat.size / 1024 / 1024).toFixed(2)} MB • {new Date(mat.timestamp).toLocaleDateString()}</p>
+                    <h3 style={{ margin: '0 0 5px 0', color: '#1f2937', fontSize: '1.2rem' }}>{mat.metadata?.title || mat.filename}</h3>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '0.85rem' }}>{mat.metadata?.originalName || mat.filename} • {(mat.length / 1024 / 1024).toFixed(2)} MB • {new Date(mat.metadata?.timestamp || Date.now()).toLocaleDateString()}</p>
                   </div>
-                  <a href={mat.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f3f4f6', color: '#2563eb', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 600, transition: 'background 0.2s' }}
+                  <a href={`${API_URL}/materials/download/${mat.filename}`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f3f4f6', color: '#2563eb', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 600, transition: 'background 0.2s' }}
                      onMouseOver={e => e.currentTarget.style.background = '#e5e7eb'}
                      onMouseOut={e => e.currentTarget.style.background = '#f3f4f6'}
                   >
@@ -139,14 +122,8 @@ const Materials = () => {
                 <input type="file" onChange={e=>setFile(e.target.files[0])} style={{ width: '100%', padding: '10px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #cbd5e1' }} required />
               </div>
 
-              {uploading && (
-                <div style={{ width: '100%', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: `${uploadProgress}%`, background: '#22c55e', height: '6px', transition: 'width 0.2s' }}></div>
-                </div>
-              )}
-
               <button type="submit" disabled={uploading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', background: uploading ? '#94a3b8' : '#22c55e', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: uploading ? 'default' : 'pointer', transition: 'background 0.2s' }}>
-                <Upload size={18} /> {uploading ? `Uploading ${Math.round(uploadProgress)}%` : 'Upload Material'}
+                <Upload size={18} /> {uploading ? `Uploading to MongoDB...` : 'Upload Material'}
               </button>
             </form>
           )}
