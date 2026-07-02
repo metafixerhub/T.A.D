@@ -7,7 +7,7 @@ const HeroSection = () => {
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(37, 99, 235, 0.1)', border: '1px solid #2563eb', color: '#2563eb', padding: '6px 12px', borderRadius: '20px', marginBottom: '24px', fontSize: '0.85rem', fontWeight: 600 }}>
         <Shield size={16} /> SECURE THE FUTURE
       </div>
-      <h1 style={{ fontSize: '3.5rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '24px', color: '#111827' }}>
+      <h1 className="hero-title">
         ᴍᴀꜱᴛᴇʀ ᴄʏʙᴇʀ ꜱᴇᴄᴜʀɪᴛʏ & <span className="text-cyan">ᴄᴏᴅɪɴɢ ꜱʏꜱᴛᴇᴍꜱ</span>
       </h1>
       <p style={{ color: '#4b5563', fontSize: '1.2rem', margin: '0 auto 40px auto', maxWidth: '600px' }}>

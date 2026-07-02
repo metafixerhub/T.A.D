@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   MonitorPlay, LayoutGrid, HelpCircle, FileText, Trophy, Award, 
-  Bell, Gift, Flame, LogOut
+  Bell, Gift, LogOut, Menu, X
 } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -14,11 +14,19 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   
+  // Mobile Sidebar State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
   // Role Selection State
   const [role, setRole] = useState(sessionStorage.getItem('userRole') || null);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [passcode, setPasscode] = useState('');
   const [roleError, setRoleError] = useState('');
+
+  // Close sidebar on route change
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -28,7 +36,6 @@ const Dashboard = () => {
           setShowRoleModal(true);
         }
       } else {
-        // Not logged in, kick them out
         navigate('/');
       }
       setLoadingAuth(false);
@@ -77,9 +84,9 @@ const Dashboard = () => {
       
       {/* ROLE SELECTION MODAL */}
       {showRoleModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'white', padding: '40px', borderRadius: '16px', width: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-            <h2 style={{ margin: '0 0 20px 0', color: '#1f2937' }}>Welcome! Are you a...</h2>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ background: 'white', padding: '40px', borderRadius: '16px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            <h2 style={{ margin: '0 0 20px 0', color: '#1f2937', fontSize: '1.5rem' }}>Welcome! Are you a...</h2>
             
             <button onClick={() => handleRoleSelect('student')} style={{ width: '100%', padding: '15px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer', marginBottom: '20px' }}>
               Student
@@ -92,7 +99,7 @@ const Dashboard = () => {
                 placeholder="Enter Teacher Passcode" 
                 value={passcode}
                 onChange={e => setPasscode(e.target.value)}
-                style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '6px', marginBottom: '10px' }}
+                style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '6px', marginBottom: '10px', boxSizing: 'border-box' }}
               />
               {roleError && <p style={{ color: 'red', fontSize: '0.8rem', margin: '0 0 10px 0' }}>{roleError}</p>}
               <button onClick={() => handleRoleSelect('teacher')} style={{ width: '100%', padding: '12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>
@@ -103,11 +110,23 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* MOBILE OVERLAY */}
+      {isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)}
+          className="show-mobile"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 999 }}
+        />
+      )}
+
       {/* LEFT SIDEBAR */}
-      <aside style={{ width: '250px', background: 'white', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src="/logo.png" alt="Logo" style={{ height: '30px', width: '30px', objectFit: 'contain' }} onError={e => e.target.style.display='none'} />
-          <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1f2937' }}>TRAINING HUB</span>
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`} style={{ background: 'white', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/logo.png" alt="Logo" style={{ height: '30px', width: '30px', objectFit: 'contain' }} onError={e => e.target.style.display='none'} />
+            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1f2937' }}>TRAINING HUB</span>
+          </div>
+          <X className="show-mobile" size={24} color="#6b7280" style={{ cursor: 'pointer' }} onClick={() => setIsSidebarOpen(false)} />
         </div>
         
         <div style={{ padding: '15px 0', flex: 1, overflowY: 'auto' }}>
@@ -140,10 +159,13 @@ const Dashboard = () => {
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         
         {/* TOP HEADER */}
-        <header style={{ height: '70px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 30px', borderBottom: '1px solid #e5e7eb', zIndex: 10 }}>
-          <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#1f2937', fontWeight: 600 }}>
-            {navLinks.find(l => l.path === location.pathname)?.name || 'Dashboard'}
-          </h2>
+        <header className="mobile-padding" style={{ height: '70px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 30px', borderBottom: '1px solid #e5e7eb', zIndex: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <Menu className="show-mobile" size={26} color="#1f2937" style={{ cursor: 'pointer' }} onClick={() => setIsSidebarOpen(true)} />
+            <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#1f2937', fontWeight: 600 }}>
+              {navLinks.find(l => l.path === location.pathname)?.name || 'Dashboard'}
+            </h2>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <Gift size={22} color="#f59e0b" style={{ cursor: 'pointer' }} />
             <Bell size={22} color="#4b5563" style={{ cursor: 'pointer' }} />

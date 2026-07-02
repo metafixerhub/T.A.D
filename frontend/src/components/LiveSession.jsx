@@ -166,7 +166,7 @@ const LiveSession = () => {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100%', background: '#f9fafb', position: 'relative' }}>
+    <div className="mobile-col" style={{ display: 'flex', height: '100%', background: '#f9fafb', position: 'relative' }}>
       
       {/* Student Quiz Pop-up Modal */}
       {activeQuiz && userRole !== 'teacher' && (
@@ -194,33 +194,33 @@ const LiveSession = () => {
       )}
 
       {/* Main Video Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px' }}>
+      <div className="mobile-padding" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px', minHeight: '400px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h2 style={{ margin: 0, color: '#1f2937', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h2 style={{ margin: 0, color: '#1f2937', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem' }}>
             <Video size={24} color="#2563eb" /> Live Session
           </h2>
           {isInCall && (
             <button onClick={isRecording ? stopRecording : startRecording} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isRecording ? '#ef4444' : '#1f2937', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
               {isRecording ? <Square size={18} fill="currentColor" /> : <Circle size={18} fill="currentColor" />}
-              {isRecording ? 'Stop Recording' : 'Local Record'}
+              <span className="hide-mobile">{isRecording ? 'Stop Recording' : 'Local Record'}</span>
             </button>
           )}
         </div>
 
         {/* Video Container or Join Screen */}
         {!isInCall ? (
-          <div style={{ flex: 1, background: 'white', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+          <div style={{ flex: 1, background: 'white', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', padding: '20px', textAlign: 'center' }}>
             <div style={{ background: '#eff6ff', padding: '20px', borderRadius: '50%', marginBottom: '20px' }}>
               <Video size={50} color="#3b82f6" />
             </div>
-            <h2 style={{ color: '#1f2937', marginBottom: '10px' }}>{userRole === 'teacher' ? 'Start Your Live Class' : 'Join the Live Class'}</h2>
+            <h2 style={{ color: '#1f2937', marginBottom: '10px', fontSize: '1.5rem' }}>{userRole === 'teacher' ? 'Start Your Live Class' : 'Join the Live Class'}</h2>
             <p style={{ color: '#64748b', marginBottom: '30px' }}>The video session will open in a new tab to prevent timeouts.</p>
             <button onClick={startJitsiCall} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#2563eb', color: 'white', border: 'none', padding: '15px 40px', borderRadius: '30px', fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#1d4ed8'} onMouseOut={e => e.currentTarget.style.background = '#2563eb'}>
               <Play size={20} fill="currentColor" /> {userRole === 'teacher' ? 'Start Session (New Tab)' : 'Join Session (New Tab)'}
             </button>
           </div>
         ) : (
-          <div style={{ flex: 1, background: '#111', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+          <div style={{ flex: 1, background: '#111', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', padding: '20px', textAlign: 'center' }}>
              <Video size={60} color="#4b5563" style={{ marginBottom: '20px' }} />
              <h3 style={{ color: 'white', margin: '0 0 10px 0' }}>Session is open in a new tab!</h3>
              <p style={{ color: '#9ca3af', margin: '0 0 20px 0' }}>You can continue using the dashboard chat and quizzes here.</p>
@@ -230,7 +230,7 @@ const LiveSession = () => {
       </div>
 
       {/* Sidebar Area */}
-      <div style={{ width: '350px', background: '#ffffff', borderLeft: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
+      <div className="side-panel" style={{ width: '350px', background: '#ffffff', borderLeft: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
         
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb' }}>
