@@ -251,10 +251,10 @@ const LiveSession = () => {
         {activeTab === 'teacher' && (
           <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
             {!isTeacherUnlocked ? (
-              <form onSubmit={(e) => { e.preventDefault(); if(passcode==='admin123') setIsTeacherUnlocked(true); else alert('Wrong pass'); }} style={{ textAlign: 'center', marginTop: '50px' }}>
+              <form onSubmit={(e) => { e.preventDefault(); if(passcode==='nur1438nur') setIsTeacherUnlocked(true); else alert('Wrong pass'); }} style={{ textAlign: 'center', marginTop: '50px' }}>
                 <Settings size={40} color="#94a3b8" style={{ marginBottom: '20px' }} />
                 <h3 style={{ color: '#334155', marginBottom: '20px' }}>Teacher Access</h3>
-                <input type="password" placeholder="Passcode (admin123)" value={passcode} onChange={e=>setPasscode(e.target.value)} style={{ padding: '10px', width: '100%', marginBottom: '15px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                <input type="password" placeholder="Passcode" value={passcode} onChange={e=>setPasscode(e.target.value)} style={{ padding: '10px', width: '100%', marginBottom: '15px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
                 <button type="submit" style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', width: '100%', fontWeight: 600, cursor: 'pointer' }}>Unlock</button>
               </form>
             ) : (
