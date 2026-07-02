@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Video, MessageSquare, Circle, Square, Settings, Send, X } from 'lucide-react';
+import { Video, MessageSquare, Circle, Square, Settings, Send, X, Play } from 'lucide-react';
 import { ref, push, onValue, set, remove } from 'firebase/database';
 import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { auth, database, firestore } from '../firebaseConfig';
@@ -8,14 +8,20 @@ const LiveSession = () => {
   const jitsiContainerRef = useRef(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  
+  // Call State
+  const [isInCall, setIsInCall] = useState(false);
+  const jitsiApiRef = useRef(null);
+
+  // Custom Recording State
   const [isRecording, setIsRecording] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
 
-  // Teacher UI State
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'teacher'
-  const [isTeacherUnlocked, setIsTeacherUnlocked] = useState(false);
+  // Role & Teacher UI State
+  const userRole = sessionStorage.getItem('userRole');
+  const [activeTab, setActiveTab] = useState(userRole === 'teacher' ? 'teacher' : 'chat');
+  const [isTeacherUnlocked, setIsTeacherUnlocked] = useState(userRole === 'teacher');
   const [passcode, setPasscode] = useState('');
   
   // Quiz Builder State
@@ -29,32 +35,44 @@ const LiveSession = () => {
   // Live Quiz State for Students
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  // Jitsi Init
+  const startJitsiCall = () => {
+    setIsInCall(true);
+    // We need a small timeout to let the React ref attach to the DOM element after state change
+    setTimeout(() => {
+      const domain = 'meet.jit.si';
+      const options = {
+        roomName: 'MetaFixerHubLMSLiveSession123',
+        width: '100%',
+        height: '100%',
+        parentNode: jitsiContainerRef.current,
+        userInfo: {
+          email: auth.currentUser?.email,
+          displayName: auth.currentUser?.email?.split('@')[0] || 'Student'
+        },
+        configOverwrite: {
+          startWithAudioMuted: true,
+          startWithVideoMuted: false,
+          toolbarButtons: [
+            'camera', 'chat', 'closedcaptions', 'desktop', 'download', 'embedmeeting', 'etherpad', 'feedback', 'filmstrip', 'fullscreen', 'hangup', 'help', 'highlight', 'invite', 'linktosalesforce', 'livestreaming', 'microphone', 'mute-everyone', 'mute-video-everyone', 'participants-pane', 'profile', 'raisehand', 'recording', 'security', 'select-background', 'settings', 'shareaudio', 'sharevideo', 'shortcuts', 'stats', 'tileview', 'toggle-camera', 'videoquality', '__end'
+          ],
+        },
+      };
+      
+      const script = document.createElement('script');
+      script.src = `https://${domain}/external_api.js`;
+      script.async = true;
+      script.onload = () => {
+        jitsiApiRef.current = new window.JitsiMeetExternalAPI(domain, options);
+      };
+      document.body.appendChild(script);
+    }, 100);
+  };
+
   useEffect(() => {
-    const domain = 'meet.jit.si';
-    const options = {
-      roomName: 'MetaFixerHubLMSLiveSession',
-      width: '100%',
-      height: '100%',
-      parentNode: jitsiContainerRef.current,
-      interfaceConfigOverwrite: {
-        TOOLBAR_BUTTONS: ['microphone', 'camera', 'desktop', 'fullscreen', 'hangup', 'chat'],
-      },
-    };
-    
-    let api = null;
-    const script = document.createElement('script');
-    script.src = `https://${domain}/external_api.js`;
-    script.async = true;
-    script.onload = () => {
-      api = new window.JitsiMeetExternalAPI(domain, options);
-    };
-    document.body.appendChild(script);
-
     return () => {
-      if (api) api.dispose();
-      if(document.body.contains(script)) document.body.removeChild(script);
+      if (jitsiApiRef.current) jitsiApiRef.current.dispose();
     };
   }, []);
 
@@ -72,7 +90,7 @@ const LiveSession = () => {
       }
     }, (error) => {
       console.error("Firebase Read Error:", error);
-      setErrorMsg("Connection Error or Rules Denied. Check Firebase Console Rules.");
+      setErrorMsg("Connection Error. Check Firebase Database Rules.");
     });
     return () => unsubscribe();
   }, []);
@@ -83,7 +101,7 @@ const LiveSession = () => {
     const unsubscribe = onValue(quizRef, (snapshot) => {
       const data = snapshot.val();
       setActiveQuiz(data);
-      if (!data) setHasAnswered(false); // Reset when teacher clears quiz
+      if (!data) setHasAnswered(false);
     });
     return () => unsubscribe();
   }, []);
@@ -94,11 +112,11 @@ const LiveSession = () => {
     const user = auth.currentUser;
     const chatRef = ref(database, 'live_chat');
     try {
-      await push(chatRef, { text: newMessage, sender: user ? user.email : 'Guest', timestamp: Date.now() });
+      await push(chatRef, { text: newMessage, sender: user ? user.email.split('@')[0] : 'Guest', timestamp: Date.now() });
       setNewMessage('');
     } catch (err) {
       console.error("Firebase Write Error:", err);
-      setErrorMsg("Cannot send message. Database rules might be blocking writes.");
+      setErrorMsg("Cannot send message. Rules might be blocking.");
     }
   };
 
@@ -127,14 +145,13 @@ const LiveSession = () => {
       alert("Correct! You earned +10 XP!");
       const user = auth.currentUser;
       if (user) {
-        const username = user.displayName || user.email.split('@')[0];
         const userRef = doc(firestore, 'users', user.uid);
         try {
           const docSnap = await getDoc(userRef);
           if (docSnap.exists()) {
             await updateDoc(userRef, { xp: increment(10) });
           } else {
-            await setDoc(userRef, { username: username, xp: 10, email: user.email });
+            await setDoc(userRef, { username: user.email.split('@')[0], xp: 10, email: user.email });
           }
         } catch (err) {
           console.error("XP Error:", err);
@@ -145,7 +162,8 @@ const LiveSession = () => {
     }
   };
 
-  const startRecording = async () => { /* existing record logic */
+  // Custom Local Screen Recording (Alternative to Jitsi built-in)
+  const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
       recordedChunksRef.current = [];
@@ -176,13 +194,16 @@ const LiveSession = () => {
   };
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 81px)', background: '#f9fafb', position: 'relative' }}>
+    <div style={{ display: 'flex', height: '100%', background: '#f9fafb', position: 'relative' }}>
       
       {/* Student Quiz Pop-up Modal */}
-      {activeQuiz && (
-        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 50, background: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)', width: '90%', maxWidth: '500px' }}>
-          <h3 style={{ margin: '0 0 20px 0', color: '#1f2937', fontSize: '1.2rem' }}>Live Pop Quiz!</h3>
-          <p style={{ fontSize: '1.1rem', marginBottom: '20px' }}>{activeQuiz.question}</p>
+      {activeQuiz && userRole !== 'teacher' && (
+        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 50, background: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)', width: '90%', maxWidth: '500px', border: '2px solid #3b82f6' }}>
+          <h3 style={{ margin: '0 0 20px 0', color: '#1f2937', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ height: '15px', width: '15px', background: '#ef4444', borderRadius: '50%', display: 'inline-block', animation: 'pulse 2s infinite' }}></span>
+            Live Pop Quiz!
+          </h3>
+          <p style={{ fontSize: '1.1rem', marginBottom: '20px', fontWeight: 600 }}>{activeQuiz.question}</p>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {['A', 'B', 'C', 'D'].map(opt => (
@@ -206,12 +227,29 @@ const LiveSession = () => {
           <h2 style={{ margin: 0, color: '#1f2937', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Video size={24} color="#2563eb" /> Live Session
           </h2>
-          <button onClick={isRecording ? stopRecording : startRecording} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isRecording ? '#ef4444' : '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
-            {isRecording ? <Square size={18} fill="currentColor" /> : <Circle size={18} fill="currentColor" />}
-            {isRecording ? 'Stop Recording' : 'Record Screen'}
-          </button>
+          {isInCall && (
+            <button onClick={isRecording ? stopRecording : startRecording} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isRecording ? '#ef4444' : '#1f2937', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+              {isRecording ? <Square size={18} fill="currentColor" /> : <Circle size={18} fill="currentColor" />}
+              {isRecording ? 'Stop Recording' : 'Local Record'}
+            </button>
+          )}
         </div>
-        <div ref={jitsiContainerRef} style={{ flex: 1, background: '#e5e7eb', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }} />
+
+        {/* Video Container or Join Screen */}
+        {!isInCall ? (
+          <div style={{ flex: 1, background: 'white', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
+            <div style={{ background: '#eff6ff', padding: '20px', borderRadius: '50%', marginBottom: '20px' }}>
+              <Video size={50} color="#3b82f6" />
+            </div>
+            <h2 style={{ color: '#1f2937', marginBottom: '10px' }}>{userRole === 'teacher' ? 'Start Your Live Class' : 'Join the Live Class'}</h2>
+            <p style={{ color: '#64748b', marginBottom: '30px' }}>Camera and microphone permissions will be requested.</p>
+            <button onClick={startJitsiCall} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#2563eb', color: 'white', border: 'none', padding: '15px 40px', borderRadius: '30px', fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#1d4ed8'} onMouseOut={e => e.currentTarget.style.background = '#2563eb'}>
+              <Play size={20} fill="currentColor" /> {userRole === 'teacher' ? 'Start Session' : 'Join Session'}
+            </button>
+          </div>
+        ) : (
+          <div ref={jitsiContainerRef} style={{ flex: 1, background: '#111', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }} />
+        )}
       </div>
 
       {/* Sidebar Area */}
@@ -278,8 +316,8 @@ const LiveSession = () => {
                   </div>
                   
                   <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                    <button type="submit" style={{ flex: 1, background: '#22c55e', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Publish to Session</button>
-                    <button type="button" onClick={clearQuiz} style={{ flex: 1, background: '#ef4444', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Clear Quiz</button>
+                    <button type="submit" style={{ flex: 1, background: '#22c55e', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Publish</button>
+                    <button type="button" onClick={clearQuiz} style={{ flex: 1, background: '#ef4444', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Clear</button>
                   </div>
                 </form>
               </div>
