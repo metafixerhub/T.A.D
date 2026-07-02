@@ -39,42 +39,14 @@ const LiveSession = () => {
 
   const startJitsiCall = () => {
     setIsInCall(true);
-    // We need a small timeout to let the React ref attach to the DOM element after state change
-    setTimeout(() => {
-      const domain = 'meet.jit.si';
-      const options = {
-        roomName: 'MetaFixerHubLMSLiveSession123',
-        width: '100%',
-        height: '100%',
-        parentNode: jitsiContainerRef.current,
-        userInfo: {
-          email: auth.currentUser?.email,
-          displayName: auth.currentUser?.email?.split('@')[0] || 'Student'
-        },
-        configOverwrite: {
-          startWithAudioMuted: true,
-          startWithVideoMuted: false,
-          toolbarButtons: [
-            'camera', 'chat', 'closedcaptions', 'desktop', 'download', 'embedmeeting', 'etherpad', 'feedback', 'filmstrip', 'fullscreen', 'hangup', 'help', 'highlight', 'invite', 'linktosalesforce', 'livestreaming', 'microphone', 'mute-everyone', 'mute-video-everyone', 'participants-pane', 'profile', 'raisehand', 'recording', 'security', 'select-background', 'settings', 'shareaudio', 'sharevideo', 'shortcuts', 'stats', 'tileview', 'toggle-camera', 'videoquality', '__end'
-          ],
-        },
-      };
-      
-      const script = document.createElement('script');
-      script.src = `https://${domain}/external_api.js`;
-      script.async = true;
-      script.onload = () => {
-        jitsiApiRef.current = new window.JitsiMeetExternalAPI(domain, options);
-      };
-      document.body.appendChild(script);
-    }, 100);
+    const roomName = 'MetaFixerHubLMSLiveSession123';
+    // Append user info to the URL if possible (Jitsi supports hash params for this)
+    const displayName = auth.currentUser?.email?.split('@')[0] || 'Student';
+    const email = auth.currentUser?.email || '';
+    const jitsiUrl = `https://meet.jit.si/${roomName}#userInfo.displayName="${displayName}"&userInfo.email="${email}"`;
+    
+    window.open(jitsiUrl, '_blank');
   };
-
-  useEffect(() => {
-    return () => {
-      if (jitsiApiRef.current) jitsiApiRef.current.dispose();
-    };
-  }, []);
 
   // Firebase Chat Init
   useEffect(() => {
@@ -242,13 +214,18 @@ const LiveSession = () => {
               <Video size={50} color="#3b82f6" />
             </div>
             <h2 style={{ color: '#1f2937', marginBottom: '10px' }}>{userRole === 'teacher' ? 'Start Your Live Class' : 'Join the Live Class'}</h2>
-            <p style={{ color: '#64748b', marginBottom: '30px' }}>Camera and microphone permissions will be requested.</p>
+            <p style={{ color: '#64748b', marginBottom: '30px' }}>The video session will open in a new tab to prevent timeouts.</p>
             <button onClick={startJitsiCall} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#2563eb', color: 'white', border: 'none', padding: '15px 40px', borderRadius: '30px', fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#1d4ed8'} onMouseOut={e => e.currentTarget.style.background = '#2563eb'}>
-              <Play size={20} fill="currentColor" /> {userRole === 'teacher' ? 'Start Session' : 'Join Session'}
+              <Play size={20} fill="currentColor" /> {userRole === 'teacher' ? 'Start Session (New Tab)' : 'Join Session (New Tab)'}
             </button>
           </div>
         ) : (
-          <div ref={jitsiContainerRef} style={{ flex: 1, background: '#111', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }} />
+          <div style={{ flex: 1, background: '#111', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+             <Video size={60} color="#4b5563" style={{ marginBottom: '20px' }} />
+             <h3 style={{ color: 'white', margin: '0 0 10px 0' }}>Session is open in a new tab!</h3>
+             <p style={{ color: '#9ca3af', margin: '0 0 20px 0' }}>You can continue using the dashboard chat and quizzes here.</p>
+             <button onClick={() => setIsInCall(false)} style={{ background: 'transparent', border: '1px solid #4b5563', color: 'white', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Return to Join Screen</button>
+          </div>
         )}
       </div>
 
