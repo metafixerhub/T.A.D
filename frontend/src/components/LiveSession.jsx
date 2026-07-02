@@ -8,6 +8,7 @@ const LiveSession = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
 
@@ -46,6 +47,7 @@ const LiveSession = () => {
     const chatRef = ref(database, 'live_chat');
     
     const unsubscribe = onValue(chatRef, (snapshot) => {
+      setErrorMsg('');
       const data = snapshot.val();
       if (data) {
         const messages = Object.keys(data).map(key => ({
@@ -57,25 +59,32 @@ const LiveSession = () => {
       } else {
         setChatMessages([]);
       }
+    }, (error) => {
+      console.error("Firebase Read Error:", error);
+      setErrorMsg("Connection Error or Rules Denied. Check Firebase Console Rules.");
     });
 
     return () => unsubscribe();
   }, []);
 
-  const sendMessage = (e) => {
+  const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
     
     const user = auth.currentUser;
     const chatRef = ref(database, 'live_chat');
     
-    push(chatRef, {
-      text: newMessage,
-      sender: user ? user.email : 'Guest',
-      timestamp: Date.now()
-    });
-    
-    setNewMessage('');
+    try {
+      await push(chatRef, {
+        text: newMessage,
+        sender: user ? user.email : 'Guest',
+        timestamp: Date.now()
+      });
+      setNewMessage('');
+    } catch (err) {
+      console.error("Firebase Write Error:", err);
+      setErrorMsg("Cannot send message. Database rules might be blocking writes.");
+    }
   };
 
   // Recording functionality
@@ -152,6 +161,12 @@ const LiveSession = () => {
           <MessageSquare size={20} color="#2563eb" />
           <h3 style={{ margin: 0, color: '#1f2937', fontSize: '1.1rem' }}>Live Chat</h3>
         </div>
+        
+        {errorMsg && (
+          <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px', fontSize: '0.85rem', textAlign: 'center', borderBottom: '1px solid #fee2e2', fontWeight: 500 }}>
+            {errorMsg}
+          </div>
+        )}
         
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
           {chatMessages.map(msg => (
