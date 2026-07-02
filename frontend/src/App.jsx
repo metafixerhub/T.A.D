@@ -8,6 +8,7 @@ import Certificate from './components/Certificate';
 import LiveSession from './components/LiveSession';
 import Quiz from './components/Quiz';
 import Leaderboard from './components/Leaderboard';
+import Materials from './components/Materials';
 
 function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -22,6 +23,7 @@ function AppContent() {
           <Route path="/live" element={<LiveSession />} />
           <Route path="/practice" element={<Quiz />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/materials" element={<Materials />} />
         </Routes>
       </main>
       <Footer />

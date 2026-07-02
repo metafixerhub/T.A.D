@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, LogIn, Award, Video, HelpCircle, Trophy } from 'lucide-react';
+import { Download, LogIn, Award, Video, HelpCircle, Trophy, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Navbar = ({ onLoginClick }) => {
@@ -27,6 +27,11 @@ const Navbar = ({ onLoginClick }) => {
         {/* Leaderboard Link */}
         <Link to="/leaderboard" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#eab308', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
           <Trophy size={16} /> Leaderboard
+        </Link>
+
+        {/* Materials Link */}
+        <Link to="/materials" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
+          <FileText size={16} /> Materials
         </Link>
 
         {/* Certificate Link */}
