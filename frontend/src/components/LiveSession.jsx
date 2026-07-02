@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Video, MessageSquare, Circle, Square } from 'lucide-react';
-import { getDatabase, ref, push, onValue } from 'firebase/database';
-import { auth } from '../firebaseConfig'; // User needs to be logged in to chat
+import { ref, push, onValue } from 'firebase/database';
+import { auth, database } from '../firebaseConfig'; // User needs to be logged in to chat
 
 const LiveSession = () => {
   const jitsiContainerRef = useRef(null);
@@ -43,8 +43,7 @@ const LiveSession = () => {
 
   // Firebase Chat Init
   useEffect(() => {
-    const db = getDatabase();
-    const chatRef = ref(db, 'live_chat');
+    const chatRef = ref(database, 'live_chat');
     
     const unsubscribe = onValue(chatRef, (snapshot) => {
       const data = snapshot.val();
@@ -68,8 +67,7 @@ const LiveSession = () => {
     if (!newMessage.trim()) return;
     
     const user = auth.currentUser;
-    const db = getDatabase();
-    const chatRef = ref(db, 'live_chat');
+    const chatRef = ref(database, 'live_chat');
     
     push(chatRef, {
       text: newMessage,
