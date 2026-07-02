@@ -20,7 +20,7 @@ function AppContent() {
           <Route path="/" element={<HeroSection />} />
           <Route path="/certificat" element={<Certificate />} />
           <Route path="/live" element={<LiveSession />} />
-          <Route path="/quiz" element={<Quiz />} />
+          <Route path="/practice" element={<Quiz />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
         </Routes>
       </main>

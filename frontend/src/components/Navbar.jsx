@@ -19,9 +19,9 @@ const Navbar = ({ onLoginClick }) => {
           <Video size={16} /> Live Session
         </Link>
 
-        {/* Quiz Link */}
-        <Link to="/quiz" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8b5cf6', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
-          <HelpCircle size={16} /> Quiz
+        {/* Practice Link */}
+        <Link to="/practice" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8b5cf6', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>
+          <HelpCircle size={16} /> Practice
         </Link>
 
         {/* Leaderboard Link */}
