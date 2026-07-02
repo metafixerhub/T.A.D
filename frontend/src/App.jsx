@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import LoginBar from './components/LoginBar';
@@ -9,9 +9,23 @@ import LiveSession from './components/LiveSession';
 import Quiz from './components/Quiz';
 import Leaderboard from './components/Leaderboard';
 import Materials from './components/Materials';
+import Dashboard from './components/Dashboard';
 
 function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const location = useLocation();
+  const isDashboard = location.pathname === '/dashboard';
+
+  if (isDashboard) {
+    return (
+      <>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+        <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      </>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
