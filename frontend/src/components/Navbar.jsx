@@ -23,9 +23,6 @@ const Navbar = ({ onLoginClick }) => {
       <Link to="/materials" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem', padding: '10px 0' }}>
         <FileText size={16} /> Materials
       </Link>
-      <Link to="/certificate" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2563eb', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem', padding: '10px 0' }}>
-        <Award size={16} /> Certificate
-      </Link>
       
       <div 
         style={{ position: 'relative' }} 
@@ -57,7 +54,7 @@ const Navbar = ({ onLoginClick }) => {
   );
 
   return (
-    <nav style={styles.navbar}>
+    <nav className="glass-nav" style={{ ...styles.navbar, position: 'sticky', top: 0, zIndex: 100 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
         <Link to="/" style={styles.logoContainer}>
           <img src="/logo.png" alt="Logo" style={styles.logo} onError={(e) => { e.target.style.display = 'none' }} />

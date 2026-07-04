@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  MonitorPlay, LayoutGrid, HelpCircle, FileText, Trophy, Award, 
+  MonitorPlay, LayoutGrid, HelpCircle, FileText, Trophy, 
   Bell, Gift, LogOut, Menu, X
 } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -18,10 +18,7 @@ const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Role Selection State
-  const [role, setRole] = useState(sessionStorage.getItem('userRole') || null);
-  const [showRoleModal, setShowRoleModal] = useState(false);
-  const [passcode, setPasscode] = useState('');
-  const [roleError, setRoleError] = useState('');
+  const [role, setRole] = useState(sessionStorage.getItem('userRole') || 'student');
 
   // Close sidebar on route change
   useEffect(() => {
@@ -32,8 +29,10 @@ const Dashboard = () => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        if (!role) {
-          setShowRoleModal(true);
+        // Default to student if no role is set
+        if (!sessionStorage.getItem('userRole')) {
+          sessionStorage.setItem('userRole', 'student');
+          setRole('student');
         }
       } else {
         navigate('/');
@@ -41,23 +40,7 @@ const Dashboard = () => {
       setLoadingAuth(false);
     });
     return () => unsubscribe();
-  }, [navigate, role]);
-
-  const handleRoleSelect = (selectedRole) => {
-    if (selectedRole === 'student') {
-      sessionStorage.setItem('userRole', 'student');
-      setRole('student');
-      setShowRoleModal(false);
-    } else {
-      if (passcode === 'nur1438nur') {
-        sessionStorage.setItem('userRole', 'teacher');
-        setRole('teacher');
-        setShowRoleModal(false);
-      } else {
-        setRoleError('Incorrect teacher passcode');
-      }
-    }
-  };
+  }, [navigate]);
 
   const handleLogout = () => {
     sessionStorage.removeItem('userRole');
@@ -76,40 +59,11 @@ const Dashboard = () => {
     { name: 'Practice', icon: <HelpCircle size={18} />, path: '/dashboard/practice' },
     { name: 'Materials', icon: <FileText size={18} />, path: '/dashboard/materials' },
     { name: 'Leaderboard', icon: <Trophy size={18} />, path: '/dashboard/leaderboard' },
-    { name: 'Certificate', icon: <Award size={18} />, path: '/dashboard/certificate' },
   ];
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', background: '#f9fafb', fontFamily: '"Inter", sans-serif', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', background: '#f9fafb', fontFamily: '"Outfit", sans-serif', overflow: 'hidden' }}>
       
-      {/* ROLE SELECTION MODAL */}
-      {showRoleModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: 'white', padding: '40px', borderRadius: '16px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-            <h2 style={{ margin: '0 0 20px 0', color: '#1f2937', fontSize: '1.5rem' }}>Welcome! Are you a...</h2>
-            
-            <button onClick={() => handleRoleSelect('student')} style={{ width: '100%', padding: '15px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer', marginBottom: '20px' }}>
-              Student
-            </button>
-            
-            <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '20px' }}>
-              <p style={{ margin: '0 0 10px 0', color: '#6b7280', fontSize: '0.9rem' }}>Teacher Access</p>
-              <input 
-                type="password" 
-                placeholder="Enter Teacher Passcode" 
-                value={passcode}
-                onChange={e => setPasscode(e.target.value)}
-                style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '6px', marginBottom: '10px', boxSizing: 'border-box' }}
-              />
-              {roleError && <p style={{ color: 'red', fontSize: '0.8rem', margin: '0 0 10px 0' }}>{roleError}</p>}
-              <button onClick={() => handleRoleSelect('teacher')} style={{ width: '100%', padding: '12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>
-                Enter as Teacher
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* MOBILE OVERLAY */}
       {isSidebarOpen && (
         <div 
@@ -159,7 +113,7 @@ const Dashboard = () => {
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         
         {/* TOP HEADER */}
-        <header className="mobile-padding" style={{ height: '70px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 30px', borderBottom: '1px solid #e5e7eb', zIndex: 10 }}>
+        <header className="mobile-padding glass-nav" style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 30px', zIndex: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <Menu className="show-mobile" size={26} color="#1f2937" style={{ cursor: 'pointer' }} onClick={() => setIsSidebarOpen(true)} />
             <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#1f2937', fontWeight: 600 }}>
@@ -170,7 +124,7 @@ const Dashboard = () => {
             <Gift size={22} color="#f59e0b" style={{ cursor: 'pointer' }} />
             <Bell size={22} color="#4b5563" style={{ cursor: 'pointer' }} />
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#f3f4f6', padding: '5px 15px 5px 5px', borderRadius: '30px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(243, 244, 246, 0.8)', padding: '5px 15px 5px 5px', borderRadius: '30px' }}>
               <div style={{ height: '32px', width: '32px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
                 {user.email.charAt(0).toUpperCase()}
               </div>
