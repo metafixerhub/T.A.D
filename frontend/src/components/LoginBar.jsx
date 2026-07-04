@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Lock, Eye, EyeOff, X, User, Info } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
+import { useNavigate } from 'react-router-dom';
 
 const LoginBar = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,8 +20,8 @@ const LoginBar = ({ isOpen, onClose }) => {
     setError('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert('Successfully logged in!');
       onClose(); // Close modal on success
+      navigate('/dashboard');
     } catch (err) {
       setError('Invalid email or password. Check Firebase Config.');
     }
