@@ -89,7 +89,7 @@ app.get('/api/materials/download/:filename', async (req, res) => {
     }
 
     const file = files[0];
-    res.set('Content-Type', file.contentType);
+    res.set('Content-Type', file.contentType || 'application/pdf');
     
     // Check query param for download vs inline
     if (req.query.download === 'true') {
