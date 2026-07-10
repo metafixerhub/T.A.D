@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Upload, DownloadCloud, Settings, Lock } from 'lucide-react';
 
-// When deploying to Render, the environment variable REACT_APP_BACKEND_URL should be set to your Render URL.
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000/api';
+// Automatically switch between local backend and Render backend
+const API_URL = import.meta.env.VITE_BACKEND_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://t-a-d.onrender.com/api');
 
 const Materials = () => {
   const [materials, setMaterials] = useState([]);
