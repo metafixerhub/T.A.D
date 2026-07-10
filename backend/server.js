@@ -17,10 +17,7 @@ app.use(express.json());
 // NOTE: Set MONGO_URI in .env file (e.g. MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/test)
 const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/lms_materials';
 
-const conn = mongoose.createConnection(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+const conn = mongoose.createConnection(mongoURI);
 
 let gfs;
 let gridfsBucket;
@@ -36,7 +33,6 @@ conn.once('open', () => {
 
 const storage = new GridFsStorage({
   url: mongoURI,
-  options: { useNewUrlParser: true, useUnifiedTopology: true },
   file: (req, file) => {
     return new Promise((resolve, reject) => {
       crypto.randomBytes(16, (err, buf) => {
