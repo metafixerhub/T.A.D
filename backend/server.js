@@ -31,35 +31,35 @@ conn.once('open', () => {
   console.log('MongoDB Connected & GridFS initialized');
 });
 
-const storage = new GridFsStorage({
-  url: mongoURI,
-  file: (req, file) => {
-    return new Promise((resolve, reject) => {
-      crypto.randomBytes(16, (err, buf) => {
-        if (err) {
-          return reject(err);
-        }
-        const filename = buf.toString('hex') + path.extname(file.originalname);
-        const fileInfo = {
-          filename: filename,
-          bucketName: 'uploads',
-          metadata: {
-            title: req.body.title || file.originalname,
-            originalName: file.originalname,
-            size: req.headers['content-length'],
-            timestamp: Date.now()
-          }
-        };
-        resolve(fileInfo);
-      });
-    });
-  }
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 app.post('/api/upload', upload.single('file'), (req, res) => {
-  res.json({ file: req.file });
+  if (!req.file) {
+    return res.status(400).json({ err: 'No file uploaded' });
+  }
+
+  const filename = crypto.randomBytes(16).toString('hex') + path.extname(req.file.originalname);
+  
+  const uploadStream = gridfsBucket.openUploadStream(filename, {
+    metadata: {
+      title: req.body.title || req.file.originalname,
+      originalName: req.file.originalname,
+      size: req.file.size,
+      timestamp: Date.now()
+    },
+    contentType: req.file.mimetype
+  });
+
+  uploadStream.end(req.file.buffer);
+
+  uploadStream.on('finish', (file) => {
+    res.json({ file: file });
+  });
+
+  uploadStream.on('error', (err) => {
+    res.status(500).json({ err: 'Error uploading file' });
+  });
 });
 
 app.get('/api/materials', (req, res) => {
