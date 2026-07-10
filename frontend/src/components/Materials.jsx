@@ -84,12 +84,21 @@ const Materials = () => {
                     <h3 style={{ margin: '0 0 5px 0', color: '#1f2937', fontSize: '1.2rem' }}>{mat.metadata?.title || mat.filename}</h3>
                     <p style={{ margin: 0, color: '#6b7280', fontSize: '0.85rem' }}>{mat.metadata?.originalName || mat.filename} • {(mat.length / 1024 / 1024).toFixed(2)} MB • {new Date(mat.metadata?.timestamp || Date.now()).toLocaleDateString()}</p>
                   </div>
-                  <a href={`${API_URL}/materials/download/${mat.filename}`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f3f4f6', color: '#2563eb', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 600, transition: 'background 0.2s' }}
-                     onMouseOver={e => e.currentTarget.style.background = '#e5e7eb'}
-                     onMouseOut={e => e.currentTarget.style.background = '#f3f4f6'}
-                  >
-                    <DownloadCloud size={18} /> Download
-                  </a>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <a href={`${API_URL}/materials/download/${mat.filename}`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#eef2ff', color: '#4f46e5', textDecoration: 'none', padding: '10px 15px', borderRadius: '8px', fontWeight: 600, transition: 'background 0.2s' }}
+                       onMouseOver={e => e.currentTarget.style.background = '#e0e7ff'}
+                       onMouseOut={e => e.currentTarget.style.background = '#eef2ff'}
+                    >
+                      <FileText size={18} /> Open
+                    </a>
+                    <a href={`${API_URL}/materials/download/${mat.filename}?download=true`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f3f4f6', color: '#2563eb', textDecoration: 'none', padding: '10px 15px', borderRadius: '8px', fontWeight: 600, transition: 'background 0.2s' }}
+                       onMouseOver={e => e.currentTarget.style.background = '#e5e7eb'}
+                       onMouseOut={e => e.currentTarget.style.background = '#f3f4f6'}
+                       download
+                    >
+                      <DownloadCloud size={18} /> Download
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>

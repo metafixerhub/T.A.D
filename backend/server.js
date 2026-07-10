@@ -62,33 +62,48 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   });
 });
 
-app.get('/api/materials', (req, res) => {
-  if (!gfs) return res.status(500).send("GridFS not initialized");
+app.get('/api/materials', async (req, res) => {
+  if (!gridfsBucket) return res.status(500).send("GridFS not initialized");
   
-  gfs.files.find().toArray((err, files) => {
+  try {
+    const files = await gridfsBucket.find().toArray();
     if (!files || files.length === 0) {
       return res.status(200).json([]);
     }
     
     files.sort((a, b) => b.metadata?.timestamp - a.metadata?.timestamp);
     return res.json(files);
-  });
+  } catch (err) {
+    console.error("Error fetching materials:", err);
+    res.status(500).json({ err: "Error fetching materials" });
+  }
 });
 
-app.get('/api/materials/download/:filename', (req, res) => {
-  if (!gfs) return res.status(500).send("GridFS not initialized");
+app.get('/api/materials/download/:filename', async (req, res) => {
+  if (!gridfsBucket) return res.status(500).send("GridFS not initialized");
 
-  gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
-    if (!file || file.length === 0) {
+  try {
+    const files = await gridfsBucket.find({ filename: req.params.filename }).toArray();
+    if (!files || files.length === 0) {
       return res.status(404).json({ err: 'No file exists' });
     }
 
+    const file = files[0];
     res.set('Content-Type', file.contentType);
-    res.set('Content-Disposition', 'attachment; filename="' + (file.metadata?.originalName || file.filename) + '"');
+    
+    // Check query param for download vs inline
+    if (req.query.download === 'true') {
+      res.set('Content-Disposition', 'attachment; filename="' + (file.metadata?.originalName || file.filename) + '"');
+    } else {
+      res.set('Content-Disposition', 'inline; filename="' + (file.metadata?.originalName || file.filename) + '"');
+    }
     
     const readStream = gridfsBucket.openDownloadStream(file._id);
     readStream.pipe(res);
-  });
+  } catch (err) {
+    console.error("Error downloading file:", err);
+    res.status(500).json({ err: "Error downloading file" });
+  }
 });
 
 const port = process.env.PORT || 5000;
