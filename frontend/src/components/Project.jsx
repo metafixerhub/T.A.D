@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, CheckCircle, Award, Target, Laptop, Database, Code, Users, Server, Shield, Globe, Copy, Check } from 'lucide-react';
+import { BookOpen, CheckCircle, Award, Target, Laptop, Database, Code, Users, Server, Shield, Globe, Copy, Check, Star, UploadCloud } from 'lucide-react';
 
 const Project = () => {
   const [copiedPromptId, setCopiedPromptId] = useState(null);
@@ -11,136 +11,31 @@ const Project = () => {
   };
 
   const prompts = [
-    {
-      id: 1,
-      title: 'Prompt 1',
-      text: 'Create a project named "AI Web Academy".\n\nThis is an AI-powered e-learning website, not a video learning platform. The website teaches students how to build websites using AI tools, frontend development, backend development, deployment, and debugging.\n\nCreate a modern project structure using React + TypeScript + Vite + Tailwind CSS.'
-    },
-    {
-      id: 2,
-      title: 'Prompt 2',
-      text: 'Create a beautiful landing page with smooth animations using Framer Motion.\n\nSections:\n- Hero\n- Features\n- Learning Path\n- AI Assistant\n- Testimonials\n- Footer\n\nMake the design fully responsive.'
-    },
-    {
-      id: 3,
-      title: 'Prompt 3',
-      text: 'Add Light Mode and Dark Mode.\n\nCreate a settings page where users can change colors and themes.'
-    },
-    {
-      id: 4,
-      title: 'Prompt 4',
-      text: 'Implement Firebase Authentication.\n\nFeatures:\n- Google Login\n- Email Login\n- Registration\n- Logout\n- Protected Pages'
-    },
-    {
-      id: 5,
-      title: 'Prompt 5',
-      text: 'Create a dashboard after login.\n\nDashboard sections:\n- My Courses\n- Learning Progress\n- AI Assistant\n- Projects\n- Notes'
-    },
-    {
-      id: 6,
-      title: 'Prompt 6',
-      text: 'Create a Learning Roadmap page.\n\nTopics:\n1. HTML\n2. CSS\n3. JavaScript\n4. React\n5. Backend\n6. Databases\n7. APIs\n8. Deployment\n9. AI Development\n10. Bug Fixing'
-    },
-    {
-      id: 7,
-      title: 'Prompt 7',
-      text: 'Create a chapter system.\n\nEach chapter should have:\n- Introduction\n- Theory\n- Examples\n- Practice\n- Project\n- Quiz'
-    },
-    {
-      id: 8,
-      title: 'Prompt 8',
-      text: 'Create an interactive code editor page using Monaco Editor.\n\nStudents should be able to write HTML, CSS, and JavaScript and see live preview.'
-    },
-    {
-      id: 9,
-      title: 'Prompt 9',
-      text: 'Create an AI Chatbot called "AI Mentor".\n\nFeatures:\n- Answer coding questions\n- Explain concepts\n- Give hints\n- Suggest projects'
-    },
-    {
-      id: 10,
-      title: 'Prompt 10',
-      text: 'Integrate an AI model.\n\nUse any available free AI API or local model.\n\nIf no API key exists, create a mock AI response system.'
-    },
-    {
-      id: 11,
-      title: 'Prompt 11',
-      text: 'Create an AI bug solver.\n\nStudents can paste code and receive:\n- Error explanation\n- Suggested fixes\n- Better code examples'
-    },
-    {
-      id: 12,
-      title: 'Prompt 12',
-      text: 'Create an AI project generator.\n\nStudents can enter:\n"I want to build a calculator."\n\nThe AI should generate:\n- Features\n- Folder structure\n- Technologies\n- Steps'
-    },
-    {
-      id: 13,
-      title: 'Prompt 13',
-      text: 'Create an AI learning planner.\n\nStudents enter:\n- Skill level\n- Goal\n- Available time\n\nGenerate a study roadmap.'
-    },
-    {
-      id: 14,
-      title: 'Prompt 14',
-      text: 'Create a Notes section.\n\nStudents can:\n- Create notes\n- Edit notes\n- Delete notes\n- Save notes to Firebase.'
-    },
-    {
-      id: 15,
-      title: 'Prompt 15',
-      text: 'Create a Project Showcase section.\n\nStudents can upload:\n- Screenshots\n- GitHub Links\n- Project descriptions.'
-    },
-    {
-      id: 16,
-      title: 'Prompt 16',
-      text: 'Create a Resources page.\n\nInclude:\n- Documentation\n- Tutorials\n- Useful websites\n- Developer tools'
-    },
-    {
-      id: 17,
-      title: 'Prompt 17',
-      text: 'Create an AI Scanner feature.\n\nAllow users to:\n- Upload screenshots\n- Upload code images\n\nThe AI should analyze the image and explain the code or UI.'
-    },
-    {
-      id: 18,
-      title: 'Prompt 18',
-      text: 'Create a Lens feature similar to Google Lens for learning purposes.\n\nStudents upload an image of code or a website.\n\nThe AI explains:\n- Technologies used\n- Design ideas\n- Possible implementation.'
-    },
-    {
-      id: 19,
-      title: 'Prompt 19',
-      text: 'Create quizzes for every chapter.\n\nFeatures:\n- Multiple choice\n- Score calculation\n- Progress tracking.'
-    },
-    {
-      id: 20,
-      title: 'Prompt 20',
-      text: 'Create a progress system.\n\nTrack:\n- Completed chapters\n- Quiz scores\n- Projects completed.'
-    },
-    {
-      id: 21,
-      title: 'Prompt 21',
-      text: 'Create badges and achievements.\n\nExamples:\n- HTML Beginner\n- React Developer\n- Bug Hunter\n- AI Explorer'
-    },
-    {
-      id: 22,
-      title: 'Prompt 22',
-      text: 'Create an Admin Panel.\n\nAdmin can:\n- Manage chapters\n- Manage users\n- Add new content\n- View analytics.'
-    },
-    {
-      id: 23,
-      title: 'Prompt 23',
-      text: 'Create a database structure using Firebase.\n\nCollections:\nusers\nchapters\nnotes\nprojects\nprogress\nquizzes\nachievements'
-    },
-    {
-      id: 24,
-      title: 'Prompt 24',
-      text: 'Prepare the project for production.\n\nRequirements:\n- Error boundaries\n- Loading states\n- Responsive design\n- SEO optimization\n- Accessibility improvements'
-    },
-    {
-      id: 25,
-      title: 'Prompt 25',
-      text: 'Prepare deployment.\n\nSteps:\n1. Create GitHub repository.\n2. Push code.\n3. Deploy on Vercel.\n4. Create README.\n5. Create installation guide.\n6. Create project documentation.\n7. Generate architecture diagram.\n\nThe website must be production-ready and suitable for an academic final project.'
-    },
-    {
-      id: 26,
-      title: 'Final Instruction for Anti-Gravity',
-      text: 'Build this project step by step.\n\nDo not create a live class website.\n\nThis is an AI-powered e-learning platform that teaches students how websites are built using AI, frontend, backend, deployment, debugging, and project development.\n\nFocus on:\n- Clean architecture\n- Beautiful UI\n- Working AI features\n- Learning experience\n- Production-ready code\n- Proper documentation\n- Bug-free implementation\n\nYou can copy these prompts directly into Anti-Gravity in order.'
-    }
+    { id: 1, title: 'Prompt 1', text: 'Create a futuristic cyber-tech educational website called EduVerse AI with dark blue, black, cyan, and yellow colors. Make it fully responsive and animated.' },
+    { id: 2, title: 'Prompt 2', text: 'Create a modern landing page with:\n- Hero section\n- Animated background\n- Feature cards\n- Join Now button\n- Login button\n- Footer' },
+    { id: 3, title: 'Prompt 3', text: 'Create a responsive navigation bar:\n- Home\n- Courses\n- E-Books\n- Recordings\n- Projects\n- Dashboard\n- About\n- Contact\n- Login' },
+    { id: 4, title: 'Prompt 4', text: 'Implement Google Sign-In authentication using Firebase Authentication.' },
+    { id: 5, title: 'Prompt 5', text: 'Create a student dashboard showing:\n- Name\n- Profile photo\n- Courses\n- Progress\n- Certificates\n- Notifications' },
+    { id: 6, title: 'Prompt 6', text: 'Create a course management page with:\n- Python\n- AI\n- Web Development\n- Cyber Security\n- Graphic Design' },
+    { id: 7, title: 'Prompt 7', text: 'Create an e-book library system with categories and PDF downloads.' },
+    { id: 8, title: 'Prompt 8', text: 'Create a video recordings page with search and filtering.' },
+    { id: 9, title: 'Prompt 9', text: 'Integrate Firebase Realtime Database for:\n- User profiles\n- Course progress\n- Comments\n- Announcements' },
+    { id: 10, title: 'Prompt 10', text: 'Create a project submission portal where students can upload:\n- GitHub Repository Link\n- Project Title\n- Description\n- Screenshots' },
+    { id: 11, title: 'Prompt 11', text: 'Create a leaderboard system using Firebase.' },
+    { id: 12, title: 'Prompt 12', text: 'Create a notification system:\n- New announcements\n- Course updates\n- Assignment reminders' },
+    { id: 13, title: 'Prompt 13', text: 'Create a chatbot assistant.\n\nRequirements:\n- Floating chatbot button.\n- Unlimited free model.\n- Use Groq API or another free LLM API.\n- Answer questions about the website and courses.' },
+    { id: 14, title: 'Prompt 14', text: 'Create an AI image generation section where users can generate educational images.' },
+    { id: 15, title: 'Prompt 15', text: 'Create a discussion forum where students can ask questions and reply.' },
+    { id: 16, title: 'Prompt 16', text: 'Create a coding playground:\n- HTML editor\n- CSS editor\n- JavaScript editor\n- Live preview' },
+    { id: 17, title: 'Prompt 17', text: 'Create a download center for:\n- VS Code\n- Anti-Gravity\n- Python\n- Git\n- Learning resources' },
+    { id: 18, title: 'Prompt 18', text: 'Create a profile settings page:\n- Change profile picture\n- Update information\n- Dark/Light mode' },
+    { id: 19, title: 'Prompt 19', text: 'Create a certificates page showing completed courses and downloadable certificates.' },
+    { id: 20, title: 'Prompt 20', text: 'Create an admin dashboard:\n- Manage users\n- Manage courses\n- Manage announcements\n- View project submissions' },
+    { id: 21, title: 'Prompt 21', text: 'Implement security:\n- Input validation\n- Secure authentication\n- Firebase security rules\n- Error handling' },
+    { id: 22, title: 'Prompt 22', text: 'Create a fully animated UI:\n- Glassmorphism\n- Hover effects\n- Loading animations\n- Smooth page transitions' },
+    { id: 23, title: 'Prompt 23', text: 'Generate project documentation automatically:\n- Architecture\n- Technologies used\n- Features\n- Database structure' },
+    { id: 24, title: 'Prompt 24', text: 'Create a GitHub deployment guide:\n1. Create GitHub account.\n2. Create public repository.\n3. Push source code.\n4. Copy repository link.\n5. Submit repository link in the portal.' },
+    { id: 25, title: 'Prompt 25', text: 'Generate a complete README file containing:\n- Project overview\n- Installation steps\n- Features\n- Screenshots\n- Database setup\n- Deployment instructions\n- Future improvements' }
   ];
 
   return (
@@ -161,7 +56,7 @@ const Project = () => {
               EDUVERSE AI
             </h1>
           </div>
-          <p style={{ margin: 0, color: '#93c5fd', fontSize: '1.2rem', fontWeight: 500 }}>Master Project Documentation & Specifications</p>
+          <p style={{ margin: 0, color: '#93c5fd', fontSize: '1.2rem', fontWeight: 500 }}>Smart E-Learning & Coding Platform (Final Project)</p>
         </div>
       </div>
 
@@ -170,110 +65,76 @@ const Project = () => {
         {/* Left Column: Documentation */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
-          {/* Project Info */}
+          {/* Project Objective */}
           <section style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.5rem', color: '#1f2937', marginTop: 0, marginBottom: '20px', borderBottom: '2px solid #f3f4f6', paddingBottom: '15px' }}>
-              <BookOpen color="#3b82f6" /> Project Information
+              <BookOpen color="#3b82f6" /> Project Objective
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', color: '#4b5563' }}>
-              <div><b>Student Name:</b> [ENTER STUDENT NAME]</div>
-              <div><b>School/College:</b> [ENTER SCHOOL NAME]</div>
-              <div><b>Class/Grade:</b> [ENTER CLASS]</div>
-              <div><b>Project Guide:</b> [ENTER TEACHER NAME]</div>
-            </div>
-            <div style={{ marginTop: '20px', padding: '20px', background: '#f8fafc', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
-              <h3 style={{ margin: '0 0 10px 0', color: '#1e293b' }}>EduVerse AI – Smart Interactive Learning Platform</h3>
-              <p style={{ margin: 0, lineHeight: 1.6 }}>Build a modern, fully responsive, animated e-learning platform for students and teachers. The platform should look professional and be suitable for a final academic project worth 60 marks.</p>
+            <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
+              <p style={{ margin: 0, lineHeight: 1.6, color: '#334155', fontSize: '1.05rem' }}>
+                Build a fully animated, modern e-learning website that teaches coding, AI, cyber security, and design. The platform should include authentication, real-time features, an AI chatbot, project submission, and a student dashboard.
+              </p>
             </div>
           </section>
 
-          {/* Tech Stack */}
+          {/* Recommended Technologies */}
           <section style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.5rem', color: '#1f2937', marginTop: 0, marginBottom: '20px', borderBottom: '2px solid #f3f4f6', paddingBottom: '15px' }}>
-              <Code color="#8b5cf6" /> 1. Technology Stack
+              <Code color="#8b5cf6" /> Recommended Technologies
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
               <div>
-                <h4 style={{ color: '#4c1d95', marginBottom: '10px' }}>Frontend</h4>
-                <ul style={{ margin: 0, paddingLeft: '20px', color: '#4b5563', lineHeight: 1.6 }}>
-                  <li>React + TypeScript + Vite</li>
-                  <li>Tailwind CSS</li>
-                  <li>Framer Motion</li>
-                  <li>Chart.js</li>
-                  <li>Lucide React Icons</li>
+                <ul style={{ margin: 0, paddingLeft: '20px', color: '#4b5563', lineHeight: 1.8 }}>
+                  <li><b>Frontend:</b> HTML, CSS, JavaScript, React (optional)</li>
+                  <li><b>Backend:</b> Node.js + Express (optional)</li>
+                  <li><b>Database:</b> Firebase Realtime DB or MongoDB</li>
+                  <li><b>Authentication:</b> Google Sign-In</li>
                 </ul>
               </div>
               <div>
-                <h4 style={{ color: '#4c1d95', marginBottom: '10px' }}>Backend & Services</h4>
-                <ul style={{ margin: 0, paddingLeft: '20px', color: '#4b5563', lineHeight: 1.6 }}>
-                  <li>Firebase (Auth, Firestore, Storage, Realtime DB, Cloud Messaging)</li>
-                  <li>Jitsi Meet API</li>
-                  <li>Open Trivia Database API</li>
-                  <li>MediaRecorder API</li>
-                  <li>AI Chatbot API</li>
+                <ul style={{ margin: 0, paddingLeft: '20px', color: '#4b5563', lineHeight: 1.8 }}>
+                  <li><b>Hosting:</b> Vercel or Netlify</li>
+                  <li><b>Dev Tool:</b> VS Code</li>
+                  <li><b>AI Tool:</b> Anti-Gravity</li>
+                  <li><b>Version Control:</b> GitHub</li>
                 </ul>
               </div>
             </div>
           </section>
 
-          {/* Features */}
-          <section style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.5rem', color: '#1f2937', marginTop: 0, marginBottom: '20px', borderBottom: '2px solid #f3f4f6', paddingBottom: '15px' }}>
-              <Server color="#10b981" /> System Features
+          {/* Bonus Features */}
+          <section style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce3 100%)', padding: '30px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.5rem', color: '#166534', marginTop: 0, marginBottom: '20px', borderBottom: '2px solid #bbf7d0', paddingBottom: '15px' }}>
+              <Star color="#15803d" /> Bonus Features (Optional)
             </h2>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div>
-                <h4 style={{ color: '#065f46', marginBottom: '5px' }}>Live Class & Recording</h4>
-                <p style={{ margin: 0, color: '#4b5563', fontSize: '0.95rem' }}>Integrate Jitsi Meet for Video/Audio calls, Screen Share, Raise Hand, and Meeting Links. Use MediaRecorder API for session recording and downloads.</p>
-              </div>
-              
-              <div>
-                <h4 style={{ color: '#065f46', marginBottom: '5px' }}>Live Chat & Community Forum</h4>
-                <p style={{ margin: 0, color: '#4b5563', fontSize: '0.95rem' }}>Real-time messaging with group chat, emojis, file sharing. Forum features Q&A, upvotes, and categorical search.</p>
-              </div>
-              
-              <div>
-                <h4 style={{ color: '#065f46', marginBottom: '5px' }}>Course & Materials Management</h4>
-                <p style={{ margin: 0, color: '#4b5563', fontSize: '0.95rem' }}>Teachers can create courses, upload videos/PDFs/assignments, and manage students. Students can enroll, watch, and download.</p>
-              </div>
-
-              <div>
-                <h4 style={{ color: '#065f46', marginBottom: '5px' }}>Quiz & Leaderboard</h4>
-                <p style={{ margin: 0, color: '#4b5563', fontSize: '0.95rem' }}>MCQ questions with timers, auto-grading, and score calculation. Global, Course, Weekly, and Monthly rankings stored in Firestore.</p>
-              </div>
-
-              <div>
-                <h4 style={{ color: '#065f46', marginBottom: '5px' }}>AI Assistant (EduVerse AI)</h4>
-                <p style={{ margin: 0, color: '#4b5563', fontSize: '0.95rem' }}>Chatbot for homework help, explaining concepts, generating quizzes, and study planning.</p>
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+              {['AI-powered recommendation system', 'Daily coding challenges', 'Quiz system', 'Achievement badges', 'Theme customization', 'Multi-language support', 'Offline notes system', 'PWA support', 'Voice assistant', 'Dark and light themes'].map((feature, i) => (
+                <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                  <CheckCircle size={18} color="#16a34a" style={{ marginTop: '2px' }} />
+                  <span style={{ color: '#166534', fontWeight: 500 }}>{feature}</span>
+                </div>
+              ))}
             </div>
           </section>
 
-          {/* Security & Deployment */}
+          {/* Submission Requirements */}
           <section style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.5rem', color: '#1f2937', marginTop: 0, marginBottom: '20px', borderBottom: '2px solid #f3f4f6', paddingBottom: '15px' }}>
-              <Shield color="#ef4444" /> Security & Deployment
+              <UploadCloud color="#ef4444" /> Submission Requirements
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div>
-                <h4 style={{ color: '#991b1b', marginBottom: '10px' }}>Security Measures</h4>
-                <ul style={{ margin: 0, paddingLeft: '20px', color: '#4b5563', lineHeight: 1.6, fontSize: '0.95rem' }}>
-                  <li>Input Validation & Rate Limiting</li>
-                  <li>Firestore Security Rules</li>
-                  <li>Route Protection & Activity Logs</li>
-                  <li>Mitigation for XSS, CSRF, Injection</li>
-                </ul>
-              </div>
-              <div>
-                <h4 style={{ color: '#991b1b', marginBottom: '10px' }}>Deployment Pipeline</h4>
-                <ul style={{ margin: 0, paddingLeft: '20px', color: '#4b5563', lineHeight: 1.6, fontSize: '0.95rem' }}>
-                  <li>GitHub Repository Push</li>
-                  <li>Vercel Hosting</li>
-                  <li>API Documentation & README</li>
-                  <li>Architecture Diagram Included</li>
-                </ul>
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <ol style={{ margin: 0, paddingLeft: '20px', color: '#4b5563', lineHeight: 1.8, fontWeight: 500 }}>
+                <li>GitHub Repository Link</li>
+                <li>Live Website Link</li>
+                <li>Screenshots</li>
+                <li>Project Documentation</li>
+              </ol>
+              <ol start="5" style={{ margin: 0, paddingLeft: '20px', color: '#4b5563', lineHeight: 1.8, fontWeight: 500 }}>
+                <li>Database Structure Diagram</li>
+                <li>Architecture Diagram</li>
+                <li>AI Threat Model and Security</li>
+                <li>README File</li>
+              </ol>
             </div>
           </section>
 
@@ -283,32 +144,21 @@ const Project = () => {
         <div>
           <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', padding: '25px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', position: 'sticky', top: '20px' }}>
             <h3 style={{ margin: '0 0 20px 0', color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Target size={20} /> Assessment Scheme
+              <Target size={20} /> Marking Scheme
             </h3>
             
-            <div style={{ background: 'white', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
-              <div style={{ color: '#4b5563', fontSize: '0.9rem', marginBottom: '5px' }}>Project Submission</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2563eb' }}>60 Marks</div>
-            </div>
-            
-            <div style={{ background: 'white', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
-              <div style={{ color: '#4b5563', fontSize: '0.9rem', marginBottom: '5px' }}>Practical Exam</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#d97706' }}>20 Marks</div>
-            </div>
-            
-            <div style={{ background: 'white', padding: '15px', borderRadius: '8px', marginBottom: '25px' }}>
-              <div style={{ color: '#4b5563', fontSize: '0.9rem', marginBottom: '5px' }}>MCQ Exam (40 Qs)</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#16a34a' }}>20 Marks</div>
+            <div style={{ background: 'white', padding: '15px', borderRadius: '8px', marginBottom: '15px', textAlign: 'center' }}>
+              <div style={{ color: '#4b5563', fontSize: '0.9rem', marginBottom: '5px' }}>Total Marks</div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, color: '#2563eb' }}>60</div>
             </div>
 
             <div style={{ borderTop: '2px dashed #bfdbfe', paddingTop: '20px' }}>
-              <h4 style={{ margin: '0 0 10px 0', color: '#1e3a8a' }}>Project Breakdown</h4>
-              <ul style={{ margin: 0, paddingLeft: '20px', color: '#4b5563', fontSize: '0.9rem', lineHeight: 1.6 }}>
-                <li>Idea & Creativity: 15</li>
-                <li>Design & UI: 10</li>
-                <li>Code & Function: 20</li>
-                <li>Documentation: 10</li>
-                <li>Presentation: 5</li>
+              <ul style={{ margin: 0, paddingLeft: '20px', color: '#4b5563', fontSize: '0.95rem', lineHeight: 1.8 }}>
+                <li>Functionality: <b style={{ color: '#1e3a8a' }}>20 Marks</b></li>
+                <li>UI/UX & Animation: <b style={{ color: '#1e3a8a' }}>10 Marks</b></li>
+                <li>Database Integration: <b style={{ color: '#1e3a8a' }}>10 Marks</b></li>
+                <li>Documentation: <b style={{ color: '#1e3a8a' }}>10 Marks</b></li>
+                <li>Innovation & Extras: <b style={{ color: '#1e3a8a' }}>10 Marks</b></li>
               </ul>
             </div>
           </div>
@@ -322,16 +172,16 @@ const Project = () => {
           <Code color="#3b82f6" size={28} /> AI Master Prompts
         </h2>
         <p style={{ color: '#6b7280', fontSize: '1.1rem', marginBottom: '30px' }}>
-          Copy these prompts in order and provide them to the AI to build your final project step-by-step.
+          Copy these 25 master prompts in order and provide them to Anti-Gravity (or another AI) to build your final project step-by-step.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {prompts.map((prompt) => (
-            <div key={prompt.id} style={{ background: '#1e1e1e', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
+            <div key={prompt.id} style={{ background: '#121212', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
               
               {/* Header */}
-              <div style={{ background: '#2d2d2d', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #404040' }}>
-                <span style={{ color: '#e5e7eb', fontWeight: 600, fontSize: '0.95rem' }}>{prompt.title}</span>
+              <div style={{ background: '#222222', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #333' }}>
+                <span style={{ color: '#e5e7eb', fontWeight: 600, fontSize: '1rem' }}>{prompt.title}</span>
                 <button 
                   onClick={() => handleCopy(prompt.text, prompt.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', background: copiedPromptId === prompt.id ? '#16a34a' : '#4b5563', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'background 0.2s' }}
@@ -340,9 +190,9 @@ const Project = () => {
                 </button>
               </div>
 
-              {/* Code/Text Block */}
+              {/* Text Block */}
               <div style={{ padding: '20px' }}>
-                <pre style={{ margin: 0, color: '#a78bfa', fontFamily: 'monospace', fontSize: '0.95rem', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                <pre style={{ margin: 0, color: '#a78bfa', fontFamily: 'monospace', fontSize: '1rem', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
                   {prompt.text}
                 </pre>
               </div>
