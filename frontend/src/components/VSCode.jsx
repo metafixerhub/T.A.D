@@ -29,35 +29,26 @@ const VSCode = () => {
         </a>
       </div>
 
-      {/* Editor Frame */}
-      <div style={{ flex: 1, position: 'relative', background: '#1e1e1e' }}>
-        {iframeError ? (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '30px', textAlign: 'center', color: '#9ca3af' }}>
-            <AlertCircle size={48} color="#4b5563" style={{ marginBottom: '15px' }} />
-            <h3 style={{ margin: '0 0 10px 0', color: '#f3f4f6' }}>VS Code cannot be embedded</h3>
-            <p style={{ margin: '0 0 20px 0', maxWidth: '400px', lineHeight: '1.5' }}>
-              Microsoft blocks vscode.dev from loading inside an iframe on other websites for security reasons.
-            </p>
-            <a 
-              href="https://vscode.dev/" 
-              target="_blank" 
-              rel="noreferrer"
-              style={{ padding: '10px 20px', background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: '6px', fontWeight: 600 }}
-            >
-              Open VS Code in a New Tab
-            </a>
-          </div>
-        ) : (
-          <iframe 
-            src="https://vscode.dev/" 
-            title="VS Code Online"
-            style={{ width: '100%', height: '100%', border: 'none' }}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-            onError={() => setIframeError(true)}
-            // We use onLoad to theoretically catch errors, though CSP errors won't trigger standard JS errors, 
-            // the user will see the fallback button anyway if it stays blank.
-          />
-        )}
+      {/* Launch Screen */}
+      <div style={{ flex: 1, background: '#1e1e1e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center' }}>
+        <div style={{ background: '#252526', padding: '40px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', maxWidth: '500px', border: '1px solid #333' }}>
+          <Code size={64} color="#3b82f6" style={{ marginBottom: '20px' }} />
+          <h3 style={{ margin: '0 0 15px 0', color: '#f3f4f6', fontSize: '1.5rem' }}>Launch VS Code</h3>
+          <p style={{ margin: '0 0 25px 0', color: '#9ca3af', lineHeight: '1.6' }}>
+            Microsoft's security settings prevent VS Code from being embedded directly inside other websites. 
+            Click below to securely open your online editor in a new window.
+          </p>
+          <a 
+            href="https://vscode.dev/" 
+            target="_blank" 
+            rel="noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '12px 24px', background: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '1.1rem', transition: 'background 0.2s', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.3)' }}
+            onMouseOver={e => e.currentTarget.style.background = '#1d4ed8'}
+            onMouseOut={e => e.currentTarget.style.background = '#2563eb'}
+          >
+            <ExternalLink size={20} /> Launch VS Code Workspace
+          </a>
+        </div>
       </div>
       
     </div>
