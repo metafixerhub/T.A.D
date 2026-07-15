@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   MonitorPlay, LayoutGrid, HelpCircle, FileText, Trophy, 
-  Bell, Gift, LogOut, Menu, X
+  Bell, Gift, LogOut, Menu, X, Code
 } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -58,6 +58,7 @@ const Dashboard = () => {
     { name: 'Live Session', icon: <MonitorPlay size={18} />, path: '/dashboard/live' },
     { name: 'Practice', icon: <HelpCircle size={18} />, path: '/dashboard/practice' },
     { name: 'Materials', icon: <FileText size={18} />, path: '/dashboard/materials' },
+    { name: 'Code Editor', icon: <Code size={18} />, path: '/dashboard/vscode' },
     { name: 'Leaderboard', icon: <Trophy size={18} />, path: '/dashboard/leaderboard' },
   ];
 
