@@ -14,8 +14,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// NOTE: Set MONGO_URI in .env file (e.g. MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/test)
-const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/lms_materials';
+// NOTE: Set MONGO_URI in .env file
+const mongoURI = process.env.MONGO_URI || 'mongodb://metafixerhub_db_user:qerZYLxCqH7rO4A7@ac-tvsmqbz-shard-00-00.ekb4cia.mongodb.net:27017,ac-tvsmqbz-shard-00-02.ekb4cia.mongodb.net:27017,ac-tvsmqbz-shard-00-01.ekb4cia.mongodb.net:27017/lms_materials?ssl=true&authSource=admin&replicaSet=atlas-ouxnej-shard-0';
 
 const conn = mongoose.createConnection(mongoURI);
 
