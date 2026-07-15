@@ -10,6 +10,7 @@ import Quiz from './components/Quiz';
 import Leaderboard from './components/Leaderboard';
 import Materials from './components/Materials';
 import Dashboard from './components/Dashboard';
+import Project from './components/Project';
 
 import DashboardHome from './components/DashboardHome';
 
@@ -28,6 +29,7 @@ function AppContent() {
             <Route path="practice" element={<Quiz />} />
             <Route path="leaderboard" element={<Leaderboard />} />
             <Route path="materials" element={<Materials />} />
+            <Route path="project" element={<Project />} />
             <Route path="certificate" element={<Certificate />} />
           </Route>
         </Routes>
