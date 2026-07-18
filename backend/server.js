@@ -46,9 +46,9 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
       title: req.body.title || req.file.originalname,
       originalName: req.file.originalname,
       size: req.file.size,
-      timestamp: Date.now()
-    },
-    contentType: req.file.mimetype
+      timestamp: Date.now(),
+      contentType: req.file.mimetype
+    }
   });
 
   uploadStream.end(req.file.buffer);
@@ -89,13 +89,23 @@ app.get('/api/materials/download/:filename', async (req, res) => {
     }
 
     const file = files[0];
-    res.set('Content-Type', file.contentType || 'application/pdf');
+    let cType = file.metadata?.contentType || file.contentType;
+    if (!cType) {
+      const ext = file.filename.toLowerCase();
+      if (ext.endsWith('.png')) cType = 'image/png';
+      else if (ext.endsWith('.jpg') || ext.endsWith('.jpeg')) cType = 'image/jpeg';
+      else if (ext.endsWith('.gif')) cType = 'image/gif';
+      else if (ext.endsWith('.pdf')) cType = 'application/pdf';
+      else cType = 'application/octet-stream';
+    }
+    
+    res.set('Content-Type', cType);
     
     // Check query param for download vs inline
     if (req.query.download === 'true') {
-      res.set('Content-Disposition', 'attachment; filename="' + (file.metadata?.originalName || file.filename) + '"');
+      res.set('Content-Disposition', `attachment; filename="${encodeURIComponent(file.metadata?.originalName || file.filename)}"`);
     } else {
-      res.set('Content-Disposition', 'inline; filename="' + (file.metadata?.originalName || file.filename) + '"');
+      res.set('Content-Disposition', `inline; filename="${encodeURIComponent(file.metadata?.originalName || file.filename)}"`);
     }
     
     const readStream = gridfsBucket.openDownloadStream(file._id);
