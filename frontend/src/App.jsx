@@ -8,7 +8,6 @@ import Certificate from './components/Certificate';
 import LiveSession from './components/LiveSession';
 import Quiz from './components/Quiz';
 import Leaderboard from './components/Leaderboard';
-import Materials from './components/Materials';
 import Dashboard from './components/Dashboard';
 import Project from './components/Project';
 import AdminPanel from './components/AdminPanel';
@@ -32,7 +31,6 @@ function AppContent() {
             <Route path="live" element={<LiveSession />} />
             <Route path="practice" element={<Quiz />} />
             <Route path="leaderboard" element={<Leaderboard />} />
-            <Route path="materials" element={<Materials />} />
             <Route path="project" element={<Project />} />
             <Route path="certificate" element={<Certificate />} />
           </Route>

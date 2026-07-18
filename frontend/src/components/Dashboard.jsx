@@ -80,7 +80,6 @@ const Dashboard = () => {
     { name: 'Live Session', icon: <MonitorPlay size={18} />, path: '/dashboard/live' },
     { name: 'Story Corner', icon: <Award size={18} />, path: '/dashboard/story-corner' },
     { name: 'Practice', icon: <HelpCircle size={18} />, path: '/dashboard/practice' },
-    { name: 'Materials', icon: <FileText size={18} />, path: '/dashboard/materials' },
     { name: 'Final Project', icon: <Award size={18} />, path: '/dashboard/project' },
     { name: 'Leaderboard', icon: <Trophy size={18} />, path: '/dashboard/leaderboard' },
   ];
