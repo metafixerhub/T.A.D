@@ -1,8 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award } from 'lucide-react';
 import { ref, onValue, set, remove, push } from 'firebase/database';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { database, auth, firestore } from '../firebaseConfig';
+
+const DnaSubmissionItem = ({ sub, approveDNA, declineDNA }) => {
+  const [customXp, setCustomXp] = useState(sub.xp || 50);
+  return (
+    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '0.9rem' }}>{sub.userEmail}</span>
+        <span style={{ color: '#10b981', fontWeight: 600, fontSize: '0.9rem' }}>{sub.chapter}</span>
+      </div>
+      <div style={{ color: '#e2e8f0', fontSize: '0.85rem', whiteSpace: 'pre-wrap', maxHeight: '150px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '6px', marginBottom: '10px' }}>
+        {sub.answerText}
+      </div>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <input type="number" value={customXp} onChange={e=>setCustomXp(e.target.value)} style={{ width: '80px', padding: '8px', borderRadius: '6px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+        <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>XP</span>
+        <button onClick={() => approveDNA(sub, Number(customXp))} style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Approve</button>
+        <button onClick={() => declineDNA(sub)} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Decline</button>
+      </div>
+    </div>
+  );
+};
 
 const AdminPanel = () => {
   const [passcode, setPasscode] = useState('');
@@ -159,18 +180,30 @@ const AdminPanel = () => {
     }
   };
 
-  const approveDNA = async (sub) => {
+  const approveDNA = async (sub, customXpAmount) => {
     try {
       await set(ref(database, `dna_submissions/${sub.id}/approved`), true);
       const userRef = doc(firestore, 'users', sub.userId);
       const userSnap = await getDoc(userRef);
       if(userSnap.exists()) {
-        await updateDoc(userRef, { xp: (userSnap.data().xp || 0) + (sub.xp || 50) });
+        await updateDoc(userRef, { xp: (userSnap.data().xp || 0) + customXpAmount });
+      } else {
+        await setDoc(userRef, { xp: customXpAmount, username: sub.userEmail, email: sub.userEmail });
       }
-      alert(`Approved! Awarded XP to ${sub.userEmail}`);
+      alert(`Approved! Awarded ${customXpAmount} XP to ${sub.userEmail}`);
     } catch(err) {
       console.error(err);
-      alert('Failed to approve DNA submission');
+      alert(`Failed to approve DNA submission: ${err.message}`);
+    }
+  };
+
+  const declineDNA = async (sub) => {
+    if(window.confirm('Are you sure you want to decline and delete this submission?')) {
+      try {
+        await remove(ref(database, `dna_submissions/${sub.id}`));
+      } catch(err) {
+        alert('Failed to decline');
+      }
     }
   };
 
@@ -252,18 +285,7 @@ const AdminPanel = () => {
           <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Review student answers and award XP.</p>
           <div style={{ display: 'grid', gap: '10px', maxHeight: '450px', overflowY: 'auto' }}>
             {dnaSubmissions.map(sub => (
-              <div key={sub.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '0.9rem' }}>{sub.userEmail}</span>
-                  <span style={{ color: '#10b981', fontWeight: 600, fontSize: '0.9rem' }}>{sub.chapter}</span>
-                </div>
-                <div style={{ color: '#e2e8f0', fontSize: '0.85rem', whiteSpace: 'pre-wrap', maxHeight: '150px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '6px', marginBottom: '10px' }}>
-                  {sub.answerText}
-                </div>
-                <button onClick={() => approveDNA(sub)} style={{ width: '100%', background: '#8b5cf6', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
-                  Approve & Award {sub.xp} XP
-                </button>
-              </div>
+              <DnaSubmissionItem key={sub.id} sub={sub} approveDNA={approveDNA} declineDNA={declineDNA} />
             ))}
             {dnaSubmissions.length === 0 && <div style={{ color: '#64748b' }}>No pending submissions.</div>}
           </div>
