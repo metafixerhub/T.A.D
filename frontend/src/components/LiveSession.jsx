@@ -163,10 +163,31 @@ const LiveSession = () => {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      // 1. Capture screen and system audio
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      // 2. Capture microphone audio
+      const voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      
+      // 3. Mix audio streams so both system sound and microphone are recorded
+      const audioCtx = new AudioContext();
+      const dest = audioCtx.createMediaStreamDestination();
+      
+      if (displayStream.getAudioTracks().length > 0) {
+        audioCtx.createMediaStreamSource(new MediaStream(displayStream.getAudioTracks())).connect(dest);
+      }
+      if (voiceStream.getAudioTracks().length > 0) {
+        audioCtx.createMediaStreamSource(new MediaStream(voiceStream.getAudioTracks())).connect(dest);
+      }
+      
+      const combinedStream = new MediaStream([
+        ...displayStream.getVideoTracks(),
+        ...dest.stream.getTracks()
+      ]);
+
       recordedChunksRef.current = [];
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(combinedStream);
       mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunksRef.current.push(e.data); };
+      
       mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
@@ -177,16 +198,24 @@ const LiveSession = () => {
         a.download = 'live_session_record.webm';
         a.click();
         window.URL.revokeObjectURL(url);
+        
+        // Cleanup streams
+        displayStream.getTracks().forEach(t => t.stop());
+        voiceStream.getTracks().forEach(t => t.stop());
       };
+      
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
       setIsRecording(true);
-    } catch (err) { alert("Could not start screen recording."); }
+    } catch (err) { 
+      console.error(err);
+      alert("Could not start screen & voice recording. Please ensure microphone permissions are granted."); 
+    }
   };
+
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
       setIsRecording(false);
     }
   };
