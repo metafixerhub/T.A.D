@@ -114,7 +114,7 @@ const AdminPanel = () => {
       setStoryFiles([]);
     } catch (err) {
       console.error(err);
-      alert('Failed to post');
+      alert(`Failed to post: ${err.message}`);
     } finally {
       setIsUploading(false);
       setUploadProgress('');
