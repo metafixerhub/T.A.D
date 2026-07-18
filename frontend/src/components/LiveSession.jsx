@@ -1,30 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Video, MessageSquare, Circle, Square, Settings, Send, X, Play } from 'lucide-react';
-import { ref, push, onValue, set, remove } from 'firebase/database';
+import { Video, Settings, Square, Circle, Play, Trash2, Edit2, Check, X } from 'lucide-react';
+import { ref, push, onValue, set, remove, update } from 'firebase/database';
 import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { auth, database, firestore } from '../firebaseConfig';
 
 const LiveSession = () => {
-  const jitsiContainerRef = useRef(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [editingMsgId, setEditingMsgId] = useState(null);
+  const [editMsgText, setEditMsgText] = useState('');
   
-  // Call State
   const [isInCall, setIsInCall] = useState(false);
-  const jitsiApiRef = useRef(null);
-
-  // Custom Recording State
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
 
-  // Role & Teacher UI State
   const userRole = sessionStorage.getItem('userRole');
   const [activeTab, setActiveTab] = useState(userRole === 'teacher' ? 'teacher' : 'chat');
   const [isTeacherUnlocked, setIsTeacherUnlocked] = useState(userRole === 'teacher');
   const [passcode, setPasscode] = useState('');
   
-  // Quiz Builder State
   const [quizQuestion, setQuizQuestion] = useState('');
   const [optA, setOptA] = useState('');
   const [optB, setOptB] = useState('');
@@ -32,37 +27,64 @@ const LiveSession = () => {
   const [optD, setOptD] = useState('');
   const [correctOpt, setCorrectOpt] = useState('A');
 
-  // Live Quiz State for Students
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const startJitsiCall = () => {
+  const currentUserAlias = auth.currentUser ? auth.currentUser.email.split('@')[0] : 'Guest';
+
+  const startJitsiCall = async () => {
     setIsInCall(true);
-    const roomName = 'MetaFixerHubLMSLiveSession123';
-    // Append user info to the URL if possible (Jitsi supports hash params for this)
-    const displayName = auth.currentUser?.email?.split('@')[0] || 'Student';
-    const email = auth.currentUser?.email || '';
-    const jitsiUrl = `https://meet.jit.si/${roomName}#userInfo.displayName="${displayName}"&userInfo.email="${email}"`;
     
+    // Set Global Live Status True
+    if (userRole === 'teacher' || isTeacherUnlocked) {
+      await set(ref(database, 'live_status'), {
+        isLive: true,
+        timestamp: Date.now()
+      });
+    }
+
+    const roomName = 'EduVerseLiveSessionXYZ99';
+    const jitsiUrl = `https://meet.jit.si/${roomName}#userInfo.displayName="${currentUserAlias}"`;
     window.open(jitsiUrl, '_blank');
   };
 
-  // Firebase Chat Init
+  const stopJitsiCall = async () => {
+    setIsInCall(false);
+    // End Global Live Status
+    if (userRole === 'teacher' || isTeacherUnlocked) {
+      await set(ref(database, 'live_status/isLive'), false);
+    }
+  };
+
+  // Firebase Chat Init (with 24hr auto-delete logic)
   useEffect(() => {
     const chatRef = ref(database, 'live_chat');
     const unsubscribe = onValue(chatRef, (snapshot) => {
       setErrorMsg('');
       const data = snapshot.val();
       if (data) {
-        const messages = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        const now = Date.now();
+        const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+        
+        let messages = [];
+        Object.keys(data).forEach(key => {
+          const msg = data[key];
+          // Auto-delete logic: skip displaying if older than 24h
+          if (now - msg.timestamp > TWENTY_FOUR_HOURS) {
+            // Option to actively delete from DB here, but skipping display is safer
+            remove(ref(database, `live_chat/${key}`));
+          } else {
+            messages.push({ id: key, ...msg });
+          }
+        });
+
         setChatMessages(messages.sort((a,b) => a.timestamp - b.timestamp));
       } else {
         setChatMessages([]);
       }
     }, (error) => {
       console.error("Firebase Read Error:", error);
-      setErrorMsg("Connection Error. Check Firebase Database Rules.");
     });
     return () => unsubscribe();
   }, []);
@@ -81,60 +103,57 @@ const LiveSession = () => {
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
-    const user = auth.currentUser;
     const chatRef = ref(database, 'live_chat');
     try {
-      await push(chatRef, { text: newMessage, sender: user ? user.email.split('@')[0] : 'Guest', timestamp: Date.now() });
+      await push(chatRef, { text: newMessage, sender: currentUserAlias, timestamp: Date.now() });
       setNewMessage('');
     } catch (err) {
-      console.error("Firebase Write Error:", err);
       setErrorMsg("Cannot send message. Rules might be blocking.");
     }
+  };
+
+  const deleteMessage = async (id) => {
+    if (window.confirm('Delete comment?')) {
+      await remove(ref(database, `live_chat/${id}`));
+    }
+  };
+
+  const saveEditedMessage = async (id) => {
+    await update(ref(database, `live_chat/${id}`), {
+      text: editMsgText,
+      edited: true
+    });
+    setEditingMsgId(null);
   };
 
   const publishQuiz = async (e) => {
     e.preventDefault();
     if(!quizQuestion || !optA || !optB || !optC || !optD) return alert("Fill all fields");
-    const quizRef = ref(database, 'active_live_quiz');
-    await set(quizRef, {
+    await set(ref(database, 'active_live_quiz'), {
       question: quizQuestion,
       options: { A: optA, B: optB, C: optC, D: optD },
       correct: correctOpt,
       publishedAt: Date.now()
     });
-    alert("Quiz Published to all students!");
-  };
-
-  const clearQuiz = async () => {
-    await remove(ref(database, 'active_live_quiz'));
+    alert("Quiz Published!");
   };
 
   const submitStudentAnswer = async (selectedOption) => {
     if (hasAnswered || !activeQuiz) return;
     setHasAnswered(true);
-    
     if (selectedOption === activeQuiz.correct) {
       alert("Correct! You earned +10 XP!");
-      const user = auth.currentUser;
-      if (user) {
-        const userRef = doc(firestore, 'users', user.uid);
-        try {
-          const docSnap = await getDoc(userRef);
-          if (docSnap.exists()) {
-            await updateDoc(userRef, { xp: increment(10) });
-          } else {
-            await setDoc(userRef, { username: user.email.split('@')[0], xp: 10, email: user.email });
-          }
-        } catch (err) {
-          console.error("XP Error:", err);
-        }
-      }
+      const userRef = doc(firestore, 'users', auth.currentUser.uid);
+      try {
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) await updateDoc(userRef, { xp: increment(10) });
+        else await setDoc(userRef, { username: currentUserAlias, xp: 10, email: auth.currentUser.email });
+      } catch (err) {}
     } else {
       alert(`Incorrect! The correct answer was ${activeQuiz.correct}.`);
     }
   };
 
-  // Custom Local Screen Recording (Alternative to Jitsi built-in)
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
@@ -166,16 +185,16 @@ const LiveSession = () => {
   };
 
   return (
-    <div className="mobile-col" style={{ display: 'flex', height: '100%', background: '#f9fafb', position: 'relative' }}>
+    <div className="mobile-col" style={{ display: 'flex', height: '100%', background: '#0f172a', position: 'relative', color: 'white' }}>
       
       {/* Student Quiz Pop-up Modal */}
       {activeQuiz && userRole !== 'teacher' && (
-        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 50, background: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)', width: '90%', maxWidth: '500px', border: '2px solid #3b82f6' }}>
-          <h3 style={{ margin: '0 0 20px 0', color: '#1f2937', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 50, background: 'rgba(30,41,59,0.95)', backdropFilter: 'blur(10px)', padding: '30px', borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', width: '90%', maxWidth: '500px', border: '2px solid #3b82f6' }}>
+          <h3 style={{ margin: '0 0 20px 0', color: '#f8fafc', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ height: '15px', width: '15px', background: '#ef4444', borderRadius: '50%', display: 'inline-block', animation: 'pulse 2s infinite' }}></span>
             Live Pop Quiz!
           </h3>
-          <p style={{ fontSize: '1.1rem', marginBottom: '20px', fontWeight: 600 }}>{activeQuiz.question}</p>
+          <p style={{ fontSize: '1.1rem', marginBottom: '20px', fontWeight: 600, color: 'white' }}>{activeQuiz.question}</p>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {['A', 'B', 'C', 'D'].map(opt => (
@@ -183,24 +202,23 @@ const LiveSession = () => {
                 key={opt}
                 onClick={() => submitStudentAnswer(opt)}
                 disabled={hasAnswered}
-                style={{ padding: '12px', background: hasAnswered ? (opt === activeQuiz.correct ? '#22c55e' : '#f3f4f6') : '#f8fafc', color: hasAnswered && opt === activeQuiz.correct ? 'white' : '#1f2937', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: hasAnswered ? 'default' : 'pointer', textAlign: 'left', fontWeight: 500 }}
+                style={{ padding: '12px', background: hasAnswered ? (opt === activeQuiz.correct ? '#22c55e' : 'rgba(255,255,255,0.05)') : 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: hasAnswered ? 'default' : 'pointer', textAlign: 'left', fontWeight: 500 }}
               >
                 {opt}. {activeQuiz.options[opt]}
               </button>
             ))}
           </div>
-          {hasAnswered && <p style={{ textAlign: 'center', marginTop: '15px', color: '#6b7280', fontSize: '0.9rem' }}>Waiting for teacher to clear quiz...</p>}
         </div>
       )}
 
       {/* Main Video Area */}
       <div className="mobile-padding" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px', minHeight: '400px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h2 style={{ margin: 0, color: '#1f2937', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem' }}>
-            <Video size={24} color="#2563eb" /> Live Session
+          <h2 style={{ margin: 0, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem' }}>
+            <Video size={24} color="#3b82f6" /> Live Session Room
           </h2>
           {isInCall && (
-            <button onClick={isRecording ? stopRecording : startRecording} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isRecording ? '#ef4444' : '#1f2937', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+            <button onClick={isRecording ? stopRecording : startRecording} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: isRecording ? '#ef4444' : 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
               {isRecording ? <Square size={18} fill="currentColor" /> : <Circle size={18} fill="currentColor" />}
               <span className="hide-mobile">{isRecording ? 'Stop Recording' : 'Local Record'}</span>
             </button>
@@ -209,55 +227,76 @@ const LiveSession = () => {
 
         {/* Video Container or Join Screen */}
         {!isInCall ? (
-          <div style={{ flex: 1, background: 'white', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', border: '1px solid #e5e7eb', padding: '20px', textAlign: 'center' }}>
-            <div style={{ background: '#eff6ff', padding: '20px', borderRadius: '50%', marginBottom: '20px' }}>
-              <Video size={50} color="#3b82f6" />
+          <div style={{ flex: 1, background: 'rgba(30,41,59,0.5)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+            <div style={{ background: 'rgba(59,130,246,0.2)', padding: '20px', borderRadius: '50%', marginBottom: '20px', boxShadow: '0 0 30px rgba(59,130,246,0.3)' }}>
+              <Video size={50} color="#60a5fa" />
             </div>
-            <h2 style={{ color: '#1f2937', marginBottom: '10px', fontSize: '1.5rem' }}>{userRole === 'teacher' ? 'Start Your Live Class' : 'Join the Live Class'}</h2>
-            <p style={{ color: '#64748b', marginBottom: '30px' }}>The video session will open in a new tab to prevent timeouts.</p>
-            <button onClick={startJitsiCall} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#2563eb', color: 'white', border: 'none', padding: '15px 40px', borderRadius: '30px', fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#1d4ed8'} onMouseOut={e => e.currentTarget.style.background = '#2563eb'}>
-              <Play size={20} fill="currentColor" /> {userRole === 'teacher' ? 'Start Session (New Tab)' : 'Join Session (New Tab)'}
+            <h2 style={{ color: 'white', marginBottom: '10px', fontSize: '1.5rem' }}>{userRole === 'teacher' ? 'Start Your Live Class' : 'Join the Live Class'}</h2>
+            <p style={{ color: '#94a3b8', marginBottom: '30px' }}>The video session will securely open in a new tab.</p>
+            <button onClick={startJitsiCall} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', border: 'none', padding: '15px 40px', borderRadius: '30px', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+              <Play size={20} fill="currentColor" /> {userRole === 'teacher' ? 'Start Session & Notify Students' : 'Join Session'}
             </button>
           </div>
         ) : (
-          <div style={{ flex: 1, background: '#111', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', padding: '20px', textAlign: 'center' }}>
+          <div style={{ flex: 1, background: '#000', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', padding: '20px', textAlign: 'center' }}>
              <Video size={60} color="#4b5563" style={{ marginBottom: '20px' }} />
-             <h3 style={{ color: 'white', margin: '0 0 10px 0' }}>Session is open in a new tab!</h3>
-             <p style={{ color: '#9ca3af', margin: '0 0 20px 0' }}>You can continue using the dashboard chat and quizzes here.</p>
-             <button onClick={() => setIsInCall(false)} style={{ background: 'transparent', border: '1px solid #4b5563', color: 'white', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Return to Join Screen</button>
+             <h3 style={{ color: 'white', margin: '0 0 10px 0' }}>Session is running!</h3>
+             <p style={{ color: '#9ca3af', margin: '0 0 20px 0' }}>You can continue using the dashboard chat here.</p>
+             <button onClick={stopJitsiCall} style={{ background: '#ef4444', border: 'none', color: 'white', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>End Session Status</button>
           </div>
         )}
       </div>
 
       {/* Sidebar Area */}
-      <div className="side-panel" style={{ width: '350px', background: '#ffffff', borderLeft: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
+      <div className="side-panel" style={{ width: '350px', background: 'rgba(30,41,59,0.8)', borderLeft: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column' }}>
         
         {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb' }}>
-          <button onClick={() => setActiveTab('chat')} style={{ flex: 1, padding: '15px', background: activeTab === 'chat' ? 'white' : '#f8fafc', border: 'none', borderBottom: activeTab === 'chat' ? '2px solid #2563eb' : 'none', fontWeight: 600, color: activeTab === 'chat' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <button onClick={() => setActiveTab('chat')} style={{ flex: 1, padding: '15px', background: activeTab === 'chat' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', borderBottom: activeTab === 'chat' ? '2px solid #3b82f6' : 'none', fontWeight: 600, color: activeTab === 'chat' ? '#60a5fa' : '#94a3b8', cursor: 'pointer' }}>
             Live Chat
           </button>
-          <button onClick={() => setActiveTab('teacher')} style={{ flex: 1, padding: '15px', background: activeTab === 'teacher' ? 'white' : '#f8fafc', border: 'none', borderBottom: activeTab === 'teacher' ? '2px solid #2563eb' : 'none', fontWeight: 600, color: activeTab === 'teacher' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>
-            Teacher Controls
+          <button onClick={() => setActiveTab('teacher')} style={{ flex: 1, padding: '15px', background: activeTab === 'teacher' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', borderBottom: activeTab === 'teacher' ? '2px solid #3b82f6' : 'none', fontWeight: 600, color: activeTab === 'teacher' ? '#60a5fa' : '#94a3b8', cursor: 'pointer' }}>
+            Teacher Room
           </button>
         </div>
 
         {/* Chat Tab */}
         {activeTab === 'chat' && (
           <>
-            {errorMsg && <div style={{ background: '#fef2f2', color: '#ef4444', padding: '12px', fontSize: '0.85rem', textAlign: 'center', borderBottom: '1px solid #fee2e2', fontWeight: 500 }}>{errorMsg}</div>}
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ fontSize: '0.75rem', textAlign: 'center', color: '#64748b', marginBottom: '10px' }}>Messages auto-delete after 24 hours</div>
+              
               {chatMessages.map(msg => (
-                <div key={msg.id} style={{ background: '#f3f4f6', padding: '12px', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '4px', fontWeight: 600 }}>{msg.sender}</div>
-                  <div style={{ color: '#1f2937', fontSize: '0.95rem' }}>{msg.text}</div>
+                <div key={msg.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#60a5fa', fontWeight: 600 }}>{msg.sender} {msg.edited && <span style={{color: '#64748b', fontSize: '0.7rem'}}>(edited)</span>}</div>
+                    
+                    {/* Comment Controls (Edit/Delete) */}
+                    {msg.sender === currentUserAlias && (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <Edit2 size={12} color="#94a3b8" style={{ cursor: 'pointer' }} onClick={() => { setEditingMsgId(msg.id); setEditMsgText(msg.text); }} />
+                        <Trash2 size={12} color="#ef4444" style={{ cursor: 'pointer' }} onClick={() => deleteMessage(msg.id)} />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {editingMsgId === msg.id ? (
+                    <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
+                      <input type="text" value={editMsgText} onChange={e=>setEditMsgText(e.target.value)} style={{ flex: 1, padding: '5px', borderRadius: '4px', border: '1px solid #3b82f6', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '0.9rem' }} />
+                      <button onClick={() => saveEditedMessage(msg.id)} style={{ background: '#22c55e', color: 'white', border: 'none', borderRadius: '4px', padding: '0 8px', cursor: 'pointer' }}><Check size={14}/></button>
+                      <button onClick={() => setEditingMsgId(null)} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', padding: '0 8px', cursor: 'pointer' }}><X size={14}/></button>
+                    </div>
+                  ) : (
+                    <div style={{ color: '#e2e8f0', fontSize: '0.95rem' }}>{msg.text}</div>
+                  )}
                 </div>
               ))}
-              {chatMessages.length === 0 && <div style={{ color: '#9ca3af', textAlign: 'center', marginTop: '20px' }}>No messages yet...</div>}
+              {chatMessages.length === 0 && <div style={{ color: '#64748b', textAlign: 'center', marginTop: '20px' }}>No recent messages...</div>}
             </div>
-            <form onSubmit={sendMessage} style={{ padding: '20px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '10px' }}>
-              <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..." style={{ flex: 1, padding: '10px 15px', border: '1px solid #d1d5db', borderRadius: '20px', fontSize: '0.95rem' }} />
-              <button type="submit" style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', fontWeight: 600, cursor: 'pointer' }}>Send</button>
+            
+            <form onSubmit={sendMessage} style={{ padding: '15px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '10px', background: 'rgba(15,23,42,0.95)' }}>
+              <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..." style={{ flex: 1, padding: '12px 15px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '20px', fontSize: '0.95rem' }} />
+              <button type="submit" style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0 20px', borderRadius: '20px', fontWeight: 600, cursor: 'pointer' }}>Send</button>
             </form>
           </>
         )}
@@ -268,23 +307,23 @@ const LiveSession = () => {
             {!isTeacherUnlocked ? (
               <form onSubmit={(e) => { e.preventDefault(); if(passcode==='nur1438nur') setIsTeacherUnlocked(true); else alert('Wrong pass'); }} style={{ textAlign: 'center', marginTop: '50px' }}>
                 <Settings size={40} color="#94a3b8" style={{ marginBottom: '20px' }} />
-                <h3 style={{ color: '#334155', marginBottom: '20px' }}>Teacher Access</h3>
-                <input type="password" placeholder="Passcode" value={passcode} onChange={e=>setPasscode(e.target.value)} style={{ padding: '10px', width: '100%', marginBottom: '15px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
-                <button type="submit" style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', width: '100%', fontWeight: 600, cursor: 'pointer' }}>Unlock</button>
+                <h3 style={{ color: '#e2e8f0', marginBottom: '20px' }}>Teacher Access</h3>
+                <input type="password" placeholder="Passcode" value={passcode} onChange={e=>setPasscode(e.target.value)} style={{ padding: '12px', width: '100%', marginBottom: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }} />
+                <button type="submit" style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '12px 20px', borderRadius: '8px', width: '100%', fontWeight: 600, cursor: 'pointer' }}>Unlock</button>
               </form>
             ) : (
               <div>
-                <h3 style={{ color: '#1f2937', marginBottom: '20px' }}>Push Live Quiz</h3>
+                <h3 style={{ color: 'white', marginBottom: '20px' }}>Push Live Quiz</h3>
                 <form onSubmit={publishQuiz} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <textarea placeholder="Question..." value={quizQuestion} onChange={e=>setQuizQuestion(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', minHeight: '80px', fontFamily: 'inherit' }} required />
-                  <input type="text" placeholder="Option A" value={optA} onChange={e=>setOptA(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} required />
-                  <input type="text" placeholder="Option B" value={optB} onChange={e=>setOptB(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} required />
-                  <input type="text" placeholder="Option C" value={optC} onChange={e=>setOptC(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} required />
-                  <input type="text" placeholder="Option D" value={optD} onChange={e=>setOptD(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} required />
+                  <textarea placeholder="Question..." value={quizQuestion} onChange={e=>setQuizQuestion(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', minHeight: '80px', fontFamily: 'inherit' }} required />
+                  <input type="text" placeholder="Option A" value={optA} onChange={e=>setOptA(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }} required />
+                  <input type="text" placeholder="Option B" value={optB} onChange={e=>setOptB(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }} required />
+                  <input type="text" placeholder="Option C" value={optC} onChange={e=>setOptC(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }} required />
+                  <input type="text" placeholder="Option D" value={optD} onChange={e=>setOptD(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }} required />
                   
                   <div style={{ marginTop: '10px' }}>
-                    <label style={{ fontSize: '0.9rem', color: '#64748b', display: 'block', marginBottom: '5px' }}>Correct Answer:</label>
-                    <select value={correctOpt} onChange={e=>setCorrectOpt(e.target.value)} style={{ padding: '10px', width: '100%', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                    <label style={{ fontSize: '0.9rem', color: '#94a3b8', display: 'block', marginBottom: '5px' }}>Correct Answer:</label>
+                    <select value={correctOpt} onChange={e=>setCorrectOpt(e.target.value)} style={{ padding: '10px', width: '100%', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}>
                       <option value="A">Option A</option>
                       <option value="B">Option B</option>
                       <option value="C">Option C</option>
@@ -294,7 +333,7 @@ const LiveSession = () => {
                   
                   <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                     <button type="submit" style={{ flex: 1, background: '#22c55e', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Publish</button>
-                    <button type="button" onClick={clearQuiz} style={{ flex: 1, background: '#ef4444', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Clear</button>
+                    <button type="button" onClick={async () => await remove(ref(database, 'active_live_quiz'))} style={{ flex: 1, background: '#ef4444', color: 'white', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Clear</button>
                   </div>
                 </form>
               </div>

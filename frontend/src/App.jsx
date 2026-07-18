@@ -11,6 +11,8 @@ import Leaderboard from './components/Leaderboard';
 import Materials from './components/Materials';
 import Dashboard from './components/Dashboard';
 import Project from './components/Project';
+import AdminPanel from './components/AdminPanel';
+import StoryCorner from './components/StoryCorner';
 
 import DashboardHome from './components/DashboardHome';
 
@@ -25,6 +27,8 @@ function AppContent() {
         <Routes>
           <Route path="/dashboard" element={<Dashboard />}>
             <Route index element={<DashboardHome />} />
+            <Route path="admin" element={<AdminPanel />} />
+            <Route path="story-corner" element={<StoryCorner />} />
             <Route path="live" element={<LiveSession />} />
             <Route path="practice" element={<Quiz />} />
             <Route path="leaderboard" element={<Leaderboard />} />

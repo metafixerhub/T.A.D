@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   MonitorPlay, LayoutGrid, HelpCircle, FileText, Trophy, 
-  Bell, Gift, LogOut, Menu, X, Award
+  Bell, Gift, LogOut, Menu, X, Award, ShieldAlert, Video, Info
 } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
+import { ref, onValue } from 'firebase/database';
+import { auth, database } from '../firebaseConfig';
 
 const Dashboard = () => {
   const location = useLocation();
@@ -13,14 +14,13 @@ const Dashboard = () => {
   
   const [user, setUser] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
-  
-  // Mobile Sidebar State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // Role Selection State
   const [role, setRole] = useState(sessionStorage.getItem('userRole') || 'student');
 
-  // Close sidebar on route change
+  // Global State
+  const [liveStatus, setLiveStatus] = useState(false);
+  const [adminAlert, setAdminAlert] = useState(null);
+
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [location.pathname]);
@@ -29,7 +29,6 @@ const Dashboard = () => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        // Default to student if no role is set
         if (!sessionStorage.getItem('userRole')) {
           sessionStorage.setItem('userRole', 'student');
           setRole('student');
@@ -42,20 +41,44 @@ const Dashboard = () => {
     return () => unsubscribe();
   }, [navigate]);
 
+  // Listen for Global Live Status & Admin Alerts
+  useEffect(() => {
+    const liveRef = ref(database, 'live_status/isLive');
+    const unsubLive = onValue(liveRef, (snapshot) => {
+      setLiveStatus(!!snapshot.val());
+    });
+
+    const alertRef = ref(database, 'admin_alert');
+    const unsubAlert = onValue(alertRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && data.message && Date.now() - data.timestamp < 3600000) { // Only show alerts less than 1 hr old
+        setAdminAlert(data);
+      } else {
+        setAdminAlert(null);
+      }
+    });
+
+    return () => {
+      unsubLive();
+      unsubAlert();
+    };
+  }, []);
+
   const handleLogout = () => {
     sessionStorage.removeItem('userRole');
     signOut(auth);
   };
 
   if (loadingAuth) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: 'white' }}>Loading System...</div>;
   }
 
-  if (!user) return null; // Redirecting in useEffect
+  if (!user) return null;
 
   const navLinks = [
     { name: 'Dashboard', icon: <LayoutGrid size={18} />, path: '/dashboard' },
     { name: 'Live Session', icon: <MonitorPlay size={18} />, path: '/dashboard/live' },
+    { name: 'Story Corner', icon: <Award size={18} />, path: '/dashboard/story-corner' },
     { name: 'Practice', icon: <HelpCircle size={18} />, path: '/dashboard/practice' },
     { name: 'Materials', icon: <FileText size={18} />, path: '/dashboard/materials' },
     { name: 'Final Project', icon: <Award size={18} />, path: '/dashboard/project' },
@@ -63,7 +86,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', background: '#f9fafb', fontFamily: '"Outfit", sans-serif', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', background: '#0f172a', fontFamily: '"Outfit", sans-serif', overflow: 'hidden' }}>
       
       {/* MOBILE OVERLAY */}
       {isSidebarOpen && (
@@ -74,22 +97,22 @@ const Dashboard = () => {
         />
       )}
 
-      {/* LEFT SIDEBAR */}
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`} style={{ background: 'white', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* LEFT SIDEBAR (Premium Dark Theme) */}
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`} style={{ background: 'rgba(30, 41, 59, 0.95)', backdropFilter: 'blur(10px)', borderRight: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src="/logo.png" alt="Logo" style={{ height: '30px', width: '30px', objectFit: 'contain' }} onError={e => e.target.style.display='none'} />
-            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1f2937' }}>TRAINING HUB</span>
+            <span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#ffffff', letterSpacing: '1px' }}>EDUVERSE</span>
           </div>
-          <X className="show-mobile" size={24} color="#6b7280" style={{ cursor: 'pointer' }} onClick={() => setIsSidebarOpen(false)} />
+          <X className="show-mobile" size={24} color="#94a3b8" style={{ cursor: 'pointer' }} onClick={() => setIsSidebarOpen(false)} />
         </div>
         
-        <div style={{ padding: '15px 0', flex: 1, overflowY: 'auto' }}>
-          <div style={{ padding: '0 20px', fontSize: '0.75rem', fontWeight: 600, color: '#9ca3af', marginBottom: '10px' }}>LEARNING MENU</div>
+        <div style={{ padding: '20px 0', flex: 1, overflowY: 'auto' }}>
+          <div style={{ padding: '0 20px', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Menu</div>
           {navLinks.map(link => {
             const isActive = location.pathname === link.path;
             return (
-              <Link to={link.path} key={link.name} style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', background: isActive ? '#eef2ff' : 'transparent', color: isActive ? '#4f46e5' : '#4b5563', borderRight: isActive ? '3px solid #4f46e5' : '3px solid transparent', textDecoration: 'none' }}>
+              <Link to={link.path} key={link.name} style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', background: isActive ? 'linear-gradient(90deg, rgba(59,130,246,0.1) 0%, transparent 100%)' : 'transparent', color: isActive ? '#60a5fa' : '#94a3b8', borderRight: isActive ? '3px solid #3b82f6' : '3px solid transparent', textDecoration: 'none', transition: 'all 0.2s' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: isActive ? 600 : 500 }}>
                   {link.icon} {link.name}
                 </div>
@@ -98,38 +121,57 @@ const Dashboard = () => {
           })}
         </div>
 
-        {/* User Role Badge in Sidebar */}
-        <div style={{ padding: '20px', borderTop: '1px solid #e5e7eb' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* User Role & Secret Admin Access Button */}
+        <div style={{ padding: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
             <div>
-              <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280', fontWeight: 600 }}>ROLE</p>
-              <p style={{ margin: 0, fontSize: '0.9rem', color: '#1f2937', fontWeight: 700, textTransform: 'uppercase' }}>{role || 'Not Set'}</p>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', fontWeight: 700, letterSpacing: '1px' }}>ROLE</p>
+              <p style={{ margin: 0, fontSize: '0.95rem', color: '#e2e8f0', fontWeight: 700, textTransform: 'uppercase' }}>{role}</p>
             </div>
             <LogOut size={20} color="#ef4444" style={{ cursor: 'pointer' }} onClick={handleLogout} />
           </div>
+          <button onClick={() => navigate('/dashboard/admin')} style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#94a3b8', fontSize: '0.8rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+            <ShieldAlert size={14} /> Admin Access
+          </button>
         </div>
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
         
+        {/* GLOBAL ADMIN NOTIFICATION */}
+        {adminAlert && (
+          <div style={{ background: '#f59e0b', color: 'white', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontWeight: 600, fontSize: '0.9rem', zIndex: 50 }}>
+            <Info size={18} /> {adminAlert.message}
+          </div>
+        )}
+
+        {/* GLOBAL LIVE CLASS BANNER */}
+        {liveStatus && location.pathname !== '/dashboard/live' && (
+          <div style={{ background: '#ef4444', color: 'white', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontWeight: 600, fontSize: '0.95rem', zIndex: 50, boxShadow: '0 4px 10px rgba(239, 68, 68, 0.4)' }}>
+            <span style={{ height: '10px', width: '10px', background: 'white', borderRadius: '50%', display: 'inline-block', animation: 'pulse 1.5s infinite' }}></span>
+            🔴 LIVE CLASS IS GOING ON! 
+            <button onClick={() => navigate('/dashboard/live')} style={{ background: 'white', color: '#ef4444', border: 'none', padding: '4px 12px', borderRadius: '15px', fontWeight: 700, marginLeft: '10px', cursor: 'pointer' }}>Join Now</button>
+          </div>
+        )}
+
         {/* TOP HEADER */}
-        <header className="mobile-padding glass-nav" style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 30px', zIndex: 10 }}>
+        <header className="mobile-padding" style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 30px', zIndex: 10, background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <Menu className="show-mobile" size={26} color="#1f2937" style={{ cursor: 'pointer' }} onClick={() => setIsSidebarOpen(true)} />
-            <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#1f2937', fontWeight: 600 }}>
+            <Menu className="show-mobile" size={26} color="#e2e8f0" style={{ cursor: 'pointer' }} onClick={() => setIsSidebarOpen(true)} />
+            <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#f8fafc', fontWeight: 600 }}>
               {navLinks.find(l => l.path === location.pathname)?.name || 'Dashboard'}
             </h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <Gift size={22} color="#f59e0b" style={{ cursor: 'pointer' }} />
-            <Bell size={22} color="#4b5563" style={{ cursor: 'pointer' }} />
+            <Bell size={22} color="#94a3b8" style={{ cursor: 'pointer' }} />
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(243, 244, 246, 0.8)', padding: '5px 15px 5px 5px', borderRadius: '30px' }}>
-              <div style={{ height: '32px', width: '32px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255, 255, 255, 0.1)', padding: '5px 15px 5px 5px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ height: '32px', width: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>
                 {user.email.charAt(0).toUpperCase()}
               </div>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#e2e8f0' }}>
                 {user.email.split('@')[0]}
               </span>
             </div>
