@@ -53,8 +53,8 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 
   uploadStream.end(req.file.buffer);
 
-  uploadStream.on('finish', (file) => {
-    res.json({ file: file });
+  uploadStream.on('finish', () => {
+    res.json({ file: { filename: filename } });
   });
 
   uploadStream.on('error', (err) => {
