@@ -7,6 +7,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { ref, onValue } from 'firebase/database';
 import { auth, database } from '../firebaseConfig';
+import { formatDistanceToNow } from 'date-fns';
 
 const Dashboard = () => {
   const location = useLocation();
@@ -19,7 +20,11 @@ const Dashboard = () => {
 
   // Global State
   const [liveStatus, setLiveStatus] = useState(false);
-  const [adminAlert, setAdminAlert] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [readNotifs, setReadNotifs] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('readNotifs') || '[]'); } catch(e) { return []; }
+  });
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
 
   useEffect(() => {
     setIsSidebarOpen(false);
@@ -41,28 +46,37 @@ const Dashboard = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // Listen for Global Live Status & Admin Alerts
+  // Listen for Global Live Status & Notifications
   useEffect(() => {
     const liveRef = ref(database, 'live_status/isLive');
     const unsubLive = onValue(liveRef, (snapshot) => {
       setLiveStatus(!!snapshot.val());
     });
 
-    const alertRef = ref(database, 'admin_alert');
-    const unsubAlert = onValue(alertRef, (snapshot) => {
+    const notifRef = ref(database, 'notifications');
+    const unsubNotif = onValue(notifRef, (snapshot) => {
       const data = snapshot.val();
-      if (data && data.message && Date.now() - data.timestamp < 3600000) { // Only show alerts less than 1 hr old
-        setAdminAlert(data);
+      if (data) {
+        const notifs = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        setNotifications(notifs.sort((a, b) => b.timestamp - a.timestamp));
       } else {
-        setAdminAlert(null);
+        setNotifications([]);
       }
     });
 
     return () => {
       unsubLive();
-      unsubAlert();
+      unsubNotif();
     };
   }, []);
+
+  const markAsRead = (id) => {
+    const newRead = [...readNotifs, id];
+    setReadNotifs(newRead);
+    localStorage.setItem('readNotifs', JSON.stringify(newRead));
+  };
+  
+  const unreadCount = notifications.filter(n => !readNotifs.includes(n.id)).length;
 
   const handleLogout = () => {
     sessionStorage.removeItem('userRole');
@@ -138,12 +152,7 @@ const Dashboard = () => {
       {/* MAIN CONTENT AREA */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
         
-        {/* GLOBAL ADMIN NOTIFICATION */}
-        {adminAlert && (
-          <div style={{ background: '#f59e0b', color: 'white', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontWeight: 600, fontSize: '0.9rem', zIndex: 50 }}>
-            <Info size={18} /> {adminAlert.message}
-          </div>
-        )}
+        {/* REMOVED OLD ADMIN NOTIFICATION */}
 
         {/* GLOBAL LIVE CLASS BANNER */}
         {liveStatus && location.pathname !== '/dashboard/live' && (
@@ -164,7 +173,50 @@ const Dashboard = () => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <Gift size={22} color="#f59e0b" style={{ cursor: 'pointer' }} />
-            <Bell size={22} color="#94a3b8" style={{ cursor: 'pointer' }} />
+            
+            {/* NOTIFICATION BELL */}
+            <div style={{ position: 'relative' }}>
+              <div onClick={() => setShowNotifMenu(!showNotifMenu)} style={{ cursor: 'pointer', position: 'relative' }}>
+                <Bell size={22} color={unreadCount > 0 ? '#f8fafc' : '#94a3b8'} />
+                {unreadCount > 0 && (
+                  <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: 'white', fontSize: '0.65rem', fontWeight: 700, padding: '2px 5px', borderRadius: '10px', border: '2px solid #0f172a' }}>
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              
+              {/* NOTIFICATION DROPDOWN */}
+              {showNotifMenu && (
+                <div style={{ position: 'absolute', top: '40px', right: '0', width: '320px', background: 'rgba(30,41,59,0.98)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', zIndex: 100, overflow: 'hidden' }}>
+                  <div style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', fontWeight: 700, color: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Notifications
+                    {unreadCount > 0 && <span style={{ fontSize: '0.75rem', background: '#3b82f6', padding: '2px 8px', borderRadius: '10px' }}>{unreadCount} New</span>}
+                  </div>
+                  <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    {notifications.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>No notifications yet.</div>}
+                    {notifications.map(notif => {
+                      const isRead = readNotifs.includes(notif.id);
+                      return (
+                        <div key={notif.id} style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: isRead ? 'transparent' : 'rgba(59,130,246,0.1)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '0.75rem', color: isRead ? '#64748b' : '#3b82f6', fontWeight: 600 }}>
+                              {formatDistanceToNow(new Date(notif.timestamp), { addSuffix: true })}
+                            </span>
+                            {!isRead && (
+                              <button onClick={() => markAsRead(notif.id)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}>Mark as read</button>
+                            )}
+                          </div>
+                          {notif.imageUrl && <img src={notif.imageUrl} alt="Alert" style={{ width: '100%', borderRadius: '6px', marginBottom: '10px', maxHeight: '120px', objectFit: 'cover' }} />}
+                          <div style={{ fontSize: '0.9rem', color: isRead ? '#94a3b8' : '#e2e8f0', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                            {notif.text}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255, 255, 255, 0.1)', padding: '5px 15px 5px 5px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.1)' }}>
               <div style={{ height: '32px', width: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem' }}>

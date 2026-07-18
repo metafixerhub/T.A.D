@@ -31,7 +31,9 @@ const AdminPanel = () => {
   const [error, setError] = useState('');
 
   // Admin states
-  const [alertMsg, setAlertMsg] = useState('');
+  const [notifText, setNotifText] = useState('');
+  const [notifFile, setNotifFile] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const [comments, setComments] = useState([]);
   const [storyFiles, setStoryFiles] = useState([]);
   const [storyText, setStoryText] = useState('');
@@ -87,27 +89,67 @@ const AdminPanel = () => {
       setIsLiveActive(!!snapshot.val());
     });
 
-    return () => { unsub(); unsubSub(); unsubLive(); };
+    const notifRef = ref(database, 'notifications');
+    const unsubNotif = onValue(notifRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const notifs = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        setNotifications(notifs.sort((a, b) => b.timestamp - a.timestamp));
+      } else {
+        setNotifications([]);
+      }
+    });
+
+    return () => { unsub(); unsubSub(); unsubLive(); unsubNotif(); };
   }, [unlocked]);
 
-  const sendGlobalAlert = async (e) => {
+  const publishNotification = async (e) => {
     e.preventDefault();
-    if (!alertMsg) return;
+    if (!notifText && !notifFile) return;
+    
+    setIsUploading(true);
+    let imageUrl = null;
+    
     try {
-      await set(ref(database, 'admin_alert'), {
-        message: alertMsg,
+      if (notifFile) {
+        setUploadProgress('Uploading image...');
+        const formData = new FormData();
+        formData.append('file', notifFile);
+        
+        const response = await fetch(`${API_URL}/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) throw new Error('Upload failed');
+        const data = await response.json();
+        imageUrl = `${API_URL}/materials/download/${data.file.filename}`;
+      }
+      
+      setUploadProgress('Publishing Notification...');
+      
+      await push(ref(database, 'notifications'), {
+        text: notifText,
+        imageUrl: imageUrl,
         timestamp: Date.now()
       });
-      alert('Global Alert Sent!');
-      setAlertMsg('');
+      
+      alert('Notification Published!');
+      setNotifText('');
+      setNotifFile(null);
     } catch (err) {
-      alert('Error sending alert');
+      console.error(err);
+      alert(`Failed to publish: ${err.message}`);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress('');
     }
   };
 
-  const clearGlobalAlert = async () => {
-    await remove(ref(database, 'admin_alert'));
-    alert('Alert Cleared!');
+  const deleteNotification = async (id) => {
+    if(window.confirm('Delete this notification?')) {
+      await remove(ref(database, `notifications/${id}`));
+    }
   };
 
   const deleteComment = async (id) => {
@@ -269,16 +311,16 @@ const AdminPanel = () => {
           </div>
         </div>
 
-        {/* Global Notifications */}
+        {/* Notification Publisher */}
         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#f59e0b' }}><AlertTriangle /> Global Dashboard Alert</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Send a pop-up alert to every user's dashboard instantly.</p>
-          <form onSubmit={sendGlobalAlert} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <textarea value={alertMsg} onChange={e=>setAlertMsg(e.target.value)} placeholder="Type alert message..." style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '80px' }}></textarea>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button type="submit" style={{ flex: 1, background: '#f59e0b', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Send Alert</button>
-              <button type="button" onClick={clearGlobalAlert} style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}>Clear</button>
-            </div>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#f59e0b' }}><AlertTriangle /> Notification Center</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Send a notification to everyone's dashboard bell icon.</p>
+          <form onSubmit={publishNotification} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <input type="file" accept="image/*" onChange={e=>setNotifFile(e.target.files[0])} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <textarea value={notifText} onChange={e=>setNotifText(e.target.value)} placeholder="Type notification message..." required style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '80px' }}></textarea>
+            <button type="submit" disabled={isUploading} style={{ background: isUploading ? '#94a3b8' : '#f59e0b', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: isUploading ? 'not-allowed' : 'pointer', fontWeight: 600 }}>
+              {isUploading ? uploadProgress : 'Publish Notification'}
+            </button>
           </form>
         </div>
 
@@ -298,6 +340,26 @@ const AdminPanel = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px', marginTop: '30px' }}>
+        {/* Notification Manager */}
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#f59e0b' }}><AlertTriangle /> Manage Notifications</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Delete old or incorrect notifications.</p>
+          <div style={{ display: 'grid', gap: '10px', maxHeight: '450px', overflowY: 'auto' }}>
+            {notifications.map(notif => (
+              <div key={notif.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{new Date(notif.timestamp).toLocaleString()}</span>
+                  <button onClick={() => deleteNotification(notif.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                </div>
+                {notif.imageUrl && <img src={notif.imageUrl} alt="Notification" style={{ width: '100%', borderRadius: '6px', marginBottom: '10px', maxHeight: '150px', objectFit: 'cover' }} />}
+                <div style={{ color: '#e2e8f0', fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>
+                  {notif.text}
+                </div>
+              </div>
+            ))}
+            {notifications.length === 0 && <div style={{ color: '#64748b' }}>No notifications found.</div>}
+          </div>
+        </div>
         {/* DNA Publisher */}
         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#10b981' }}><Award size={20} /> Publish DNA Assessment</h3>
