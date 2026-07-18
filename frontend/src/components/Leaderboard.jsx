@@ -25,7 +25,7 @@ const Leaderboard = () => {
         if (err.message.includes('index')) {
           setError("Firestore Index required. Check the console for the index creation link.");
         } else {
-          setError("Failed to load leaderboard. Make sure Firestore rules allow reading.");
+          setError(`Failed to load leaderboard: ${err.message}`);
         }
       }
       setLoading(false);
