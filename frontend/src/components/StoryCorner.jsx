@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, MessageCircle, Heart, Share2 } from 'lucide-react';
+import { Image as ImageIcon, MessageCircle, Heart, Share2, FileText, Download } from 'lucide-react';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebaseConfig';
 
@@ -53,9 +53,25 @@ const StoryCorner = () => {
               </div>
             )}
 
+            {/* PDF Document Link */}
+            {story.pdfUrl && (
+              <div style={{ padding: '0 20px 20px 20px' }}>
+                <a href={story.pdfUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '15px 20px', borderRadius: '12px', textDecoration: 'none', color: '#1e293b', transition: 'background 0.2s' }} onMouseOver={e=>e.currentTarget.style.background='#f1f5f9'} onMouseOut={e=>e.currentTarget.style.background='#f8fafc'}>
+                  <div style={{ background: '#ef4444', padding: '10px', borderRadius: '8px', color: 'white' }}>
+                    <FileText size={24} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '1.05rem' }}>Attached Document (PDF)</div>
+                    <div style={{ color: '#64748b', fontSize: '0.9rem' }}>Click to view or download</div>
+                  </div>
+                  <Download color="#94a3b8" size={20} />
+                </a>
+              </div>
+            )}
+
             {/* Image */}
             {story.imageUrl && (
-              <div style={{ width: '100%', maxHeight: '500px', overflow: 'hidden', background: '#f8fafc' }}>
+              <div style={{ width: '100%', maxHeight: '500px', overflow: 'hidden', background: '#f8fafc', borderTop: '1px solid #f1f5f9' }}>
                 <img src={story.imageUrl} alt="Story" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e=>e.target.style.display='none'} />
               </div>
             )}

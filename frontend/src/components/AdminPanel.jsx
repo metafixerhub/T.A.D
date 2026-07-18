@@ -12,6 +12,7 @@ const AdminPanel = () => {
   const [alertMsg, setAlertMsg] = useState('');
   const [comments, setComments] = useState([]);
   const [storyImage, setStoryImage] = useState('');
+  const [storyPdf, setStoryPdf] = useState('');
   const [storyText, setStoryText] = useState('');
 
   const handleUnlock = (e) => {
@@ -67,17 +68,19 @@ const AdminPanel = () => {
 
   const postToStoryCorner = async (e) => {
     e.preventDefault();
-    if (!storyText && !storyImage) return;
+    if (!storyText && !storyImage && !storyPdf) return;
     try {
       await push(ref(database, 'story_corner'), {
         text: storyText,
         imageUrl: storyImage,
+        pdfUrl: storyPdf,
         author: 'Admin',
         timestamp: Date.now()
       });
       alert('Posted to Story Corner!');
       setStoryText('');
       setStoryImage('');
+      setStoryPdf('');
     } catch (err) {
       alert('Failed to post');
     }
@@ -127,9 +130,10 @@ const AdminPanel = () => {
         {/* Story Corner Publisher */}
         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#3b82f6' }}><ImageIcon /> Publish to Story Corner</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Post announcements or images directly to the Story Corner feed.</p>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Post announcements, images, or PDFs directly to the feed.</p>
           <form onSubmit={postToStoryCorner} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <input type="text" value={storyImage} onChange={e=>setStoryImage(e.target.value)} placeholder="Image URL (Optional)" style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <input type="text" value={storyPdf} onChange={e=>setStoryPdf(e.target.value)} placeholder="PDF URL (Optional)" style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
             <textarea value={storyText} onChange={e=>setStoryText(e.target.value)} placeholder="Post Description..." style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '80px' }}></textarea>
             <button type="submit" style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Publish Post</button>
           </form>
