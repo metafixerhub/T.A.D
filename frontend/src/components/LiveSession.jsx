@@ -19,6 +19,7 @@ const LiveSession = () => {
   const [activeTab, setActiveTab] = useState(userRole === 'teacher' ? 'teacher' : 'chat');
   const [isTeacherUnlocked, setIsTeacherUnlocked] = useState(userRole === 'teacher');
   const [passcode, setPasscode] = useState('');
+  const [globalLiveStatus, setGlobalLiveStatus] = useState(false);
   
   const [quizQuestion, setQuizQuestion] = useState('');
   const [optA, setOptA] = useState('');
@@ -97,7 +98,13 @@ const LiveSession = () => {
       setActiveQuiz(data);
       if (!data) setHasAnswered(false);
     });
-    return () => unsubscribe();
+    
+    const liveRef = ref(database, 'live_status/isLive');
+    const unsubLive = onValue(liveRef, (snapshot) => {
+      setGlobalLiveStatus(!!snapshot.val());
+    });
+    
+    return () => { unsubscribe(); unsubLive(); };
   }, []);
 
   const sendMessage = async (e) => {
@@ -227,14 +234,26 @@ const LiveSession = () => {
 
         {/* Video Container or Join Screen */}
         {!isInCall ? (
-          <div style={{ flex: 1, background: 'rgba(30,41,59,0.5)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
-            <div style={{ background: 'rgba(59,130,246,0.2)', padding: '20px', borderRadius: '50%', marginBottom: '20px', boxShadow: '0 0 30px rgba(59,130,246,0.3)' }}>
-              <Video size={50} color="#60a5fa" />
+          <div style={{ flex: 1, background: 'rgba(30,41,59,0.5)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+            {globalLiveStatus && (
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: '#ef4444', color: 'white', padding: '10px', fontWeight: 'bold', letterSpacing: '2px', animation: 'pulse 2s infinite' }}>
+                🔴 LIVE CLASS IS CURRENTLY RUNNING
+              </div>
+            )}
+            
+            <div style={{ background: globalLiveStatus ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59,130,246,0.2)', padding: '20px', borderRadius: '50%', marginBottom: '20px', boxShadow: globalLiveStatus ? '0 0 30px rgba(239, 68, 68, 0.4)' : '0 0 30px rgba(59,130,246,0.3)', marginTop: globalLiveStatus ? '30px' : '0' }}>
+              <Video size={50} color={globalLiveStatus ? '#ef4444' : '#60a5fa'} />
             </div>
-            <h2 style={{ color: 'white', marginBottom: '10px', fontSize: '1.5rem' }}>{userRole === 'teacher' ? 'Start Your Live Class' : 'Join the Live Class'}</h2>
-            <p style={{ color: '#94a3b8', marginBottom: '30px' }}>The video session will securely open in a new tab.</p>
-            <button onClick={startJitsiCall} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', border: 'none', padding: '15px 40px', borderRadius: '30px', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-              <Play size={20} fill="currentColor" /> {userRole === 'teacher' ? 'Start Session & Notify Students' : 'Join Session'}
+            
+            <h2 style={{ color: 'white', marginBottom: '10px', fontSize: '1.5rem' }}>
+              {userRole === 'teacher' ? 'Start Your Live Class' : (globalLiveStatus ? 'Class is Live!' : 'Join the Live Class')}
+            </h2>
+            <p style={{ color: '#94a3b8', marginBottom: '30px' }}>
+              {globalLiveStatus && userRole !== 'teacher' ? 'The teacher is live right now. Click below to fast join the session!' : 'The video session will securely open in a new tab.'}
+            </p>
+            
+            <button onClick={startJitsiCall} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: globalLiveStatus && userRole !== 'teacher' ? '#ef4444' : 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', border: 'none', padding: '15px 40px', borderRadius: '30px', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer', transition: 'transform 0.2s', boxShadow: globalLiveStatus && userRole !== 'teacher' ? '0 10px 20px rgba(239,68,68,0.3)' : '0 10px 20px rgba(59,130,246,0.2)' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+              <Play size={20} fill="currentColor" /> {userRole === 'teacher' ? 'Start Session & Notify Students' : (globalLiveStatus ? 'FAST JOIN LIVE' : 'Join Session')}
             </button>
           </div>
         ) : (
