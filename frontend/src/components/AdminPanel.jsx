@@ -11,9 +11,12 @@ const AdminPanel = () => {
   // Admin states
   const [alertMsg, setAlertMsg] = useState('');
   const [comments, setComments] = useState([]);
-  const [storyImage, setStoryImage] = useState('');
-  const [storyPdf, setStoryPdf] = useState('');
+  const [storyFiles, setStoryFiles] = useState([]);
   const [storyText, setStoryText] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
+
+  const API_URL = import.meta.env.VITE_BACKEND_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://t-a-d.onrender.com/api');
 
   const handleUnlock = (e) => {
     e.preventDefault();
@@ -68,21 +71,53 @@ const AdminPanel = () => {
 
   const postToStoryCorner = async (e) => {
     e.preventDefault();
-    if (!storyText && !storyImage && !storyPdf) return;
+    if (!storyText && storyFiles.length === 0) return;
+    
+    setIsUploading(true);
+    let attachments = [];
+    
     try {
+      if (storyFiles.length > 0) {
+        for (let i = 0; i < storyFiles.length; i++) {
+          setUploadProgress(`Uploading file ${i + 1} of ${storyFiles.length}...`);
+          const file = storyFiles[i];
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const response = await fetch(`${API_URL}/upload`, {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (!response.ok) throw new Error('Upload failed');
+          const data = await response.json();
+          
+          attachments.push({
+            name: file.name,
+            type: file.type.includes('pdf') ? 'pdf' : 'image',
+            url: `${API_URL}/materials/download/${data.file.filename}`
+          });
+        }
+      }
+      
+      setUploadProgress('Publishing to Story Corner...');
+      
       await push(ref(database, 'story_corner'), {
         text: storyText,
-        imageUrl: storyImage,
-        pdfUrl: storyPdf,
+        attachments: attachments,
         author: 'Admin',
         timestamp: Date.now()
       });
+      
       alert('Posted to Story Corner!');
       setStoryText('');
-      setStoryImage('');
-      setStoryPdf('');
+      setStoryFiles([]);
     } catch (err) {
+      console.error(err);
       alert('Failed to post');
+    } finally {
+      setIsUploading(false);
+      setUploadProgress('');
     }
   };
 
@@ -132,10 +167,11 @@ const AdminPanel = () => {
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#3b82f6' }}><ImageIcon /> Publish to Story Corner</h3>
           <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Post announcements, images, or PDFs directly to the feed.</p>
           <form onSubmit={postToStoryCorner} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <input type="text" value={storyImage} onChange={e=>setStoryImage(e.target.value)} placeholder="Image URL (Optional)" style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
-            <input type="text" value={storyPdf} onChange={e=>setStoryPdf(e.target.value)} placeholder="PDF URL (Optional)" style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
-            <textarea value={storyText} onChange={e=>setStoryText(e.target.value)} placeholder="Post Description..." style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '80px' }}></textarea>
-            <button type="submit" style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Publish Post</button>
+            <input type="file" multiple accept="image/*,.pdf" onChange={e=>setStoryFiles(Array.from(e.target.files))} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <textarea value={storyText} onChange={e=>setStoryText(e.target.value)} placeholder="Post Description (Unlimited length)..." style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '80px' }}></textarea>
+            <button type="submit" disabled={isUploading} style={{ background: isUploading ? '#94a3b8' : '#3b82f6', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: isUploading ? 'not-allowed' : 'pointer', fontWeight: 600 }}>
+              {isUploading ? uploadProgress : 'Publish Post'}
+            </button>
           </form>
         </div>
 
