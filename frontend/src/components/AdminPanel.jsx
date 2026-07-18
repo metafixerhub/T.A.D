@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle } from 'lucide-react';
+import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award } from 'lucide-react';
 import { ref, onValue, set, remove, push } from 'firebase/database';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { database, auth, firestore } from '../firebaseConfig';
