@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award } from 'lucide-react';
+import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award, MonitorPlay } from 'lucide-react';
 import { ref, onValue, set, remove, push } from 'firebase/database';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { database, auth, firestore } from '../firebaseConfig';
@@ -37,6 +37,7 @@ const AdminPanel = () => {
   const [storyText, setStoryText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
+  const [isLiveActive, setIsLiveActive] = useState(false);
 
   // DNA States
   const [dnaChapter, setDnaChapter] = useState('');
@@ -81,7 +82,12 @@ const AdminPanel = () => {
       }
     });
 
-    return () => { unsub(); unsubSub(); };
+    const liveRef = ref(database, 'live_status/isLive');
+    const unsubLive = onValue(liveRef, (snapshot) => {
+      setIsLiveActive(!!snapshot.val());
+    });
+
+    return () => { unsub(); unsubSub(); unsubLive(); };
   }, [unlocked]);
 
   const sendGlobalAlert = async (e) => {
@@ -162,6 +168,18 @@ const AdminPanel = () => {
     }
   };
 
+  const toggleLiveStatus = async () => {
+    try {
+      await set(ref(database, 'live_status'), {
+        isLive: !isLiveActive,
+        timestamp: Date.now()
+      });
+      alert(isLiveActive ? 'Live Status Turned OFF' : 'Live Status Turned ON globally!');
+    } catch(err) {
+      alert('Failed to change live status');
+    }
+  };
+
   const publishDNA = async (e) => {
     e.preventDefault();
     if(!dnaChapter || !dnaQuestions) return;
@@ -235,6 +253,22 @@ const AdminPanel = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px' }}>
         
+        {/* Live Session Broadcast Control */}
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#ef4444' }}><MonitorPlay /> Live Session Control</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '20px' }}>Broadcast a global banner to all students telling them to join the Live Class.</p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '20px', borderRadius: '12px' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 600, color: isLiveActive ? '#22c55e' : '#94a3b8' }}>
+              Current Status: {isLiveActive ? '🔴 Broadcasting Live' : '⚫ Offline'}
+            </div>
+            
+            <button onClick={toggleLiveStatus} style={{ width: '100%', background: isLiveActive ? '#ef4444' : '#22c55e', color: 'white', border: 'none', padding: '15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '1.1rem' }}>
+              {isLiveActive ? 'Turn Off Global Live Banner' : 'Turn On Global Live Banner'}
+            </button>
+          </div>
+        </div>
+
         {/* Global Notifications */}
         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#f59e0b' }}><AlertTriangle /> Global Dashboard Alert</h3>
