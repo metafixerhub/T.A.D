@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle } from 'lucide-react';
 import { ref, onValue, set, remove, push } from 'firebase/database';
-import { database, auth } from '../firebaseConfig';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { database, auth, firestore } from '../firebaseConfig';
 
 const AdminPanel = () => {
   const [passcode, setPasscode] = useState('');
@@ -15,6 +16,13 @@ const AdminPanel = () => {
   const [storyText, setStoryText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
+
+  // DNA States
+  const [dnaChapter, setDnaChapter] = useState('');
+  const [dnaXP, setDnaXP] = useState('');
+  const [dnaQuestions, setDnaQuestions] = useState('');
+  const [dnaAnswers, setDnaAnswers] = useState('');
+  const [dnaSubmissions, setDnaSubmissions] = useState([]);
 
   const API_URL = import.meta.env.VITE_BACKEND_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://t-a-d.onrender.com/api');
 
@@ -35,12 +43,24 @@ const AdminPanel = () => {
       const data = snapshot.val();
       if (data) {
         const msgs = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-        setComments(msgs.sort((a, b) => b.timestamp - a.timestamp)); // Newest first
+        setComments(msgs.sort((a, b) => b.timestamp - a.timestamp));
       } else {
         setComments([]);
       }
     });
-    return () => unsub();
+
+    const subRef = ref(database, 'dna_submissions');
+    const unsubSub = onValue(subRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const subs = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        setDnaSubmissions(subs.filter(s => !s.approved).sort((a, b) => a.timestamp - b.timestamp));
+      } else {
+        setDnaSubmissions([]);
+      }
+    });
+
+    return () => { unsub(); unsubSub(); };
   }, [unlocked]);
 
   const sendGlobalAlert = async (e) => {
@@ -121,6 +141,39 @@ const AdminPanel = () => {
     }
   };
 
+  const publishDNA = async (e) => {
+    e.preventDefault();
+    if(!dnaChapter || !dnaQuestions) return;
+    try {
+      await push(ref(database, 'dna_assessments'), {
+        chapter: dnaChapter,
+        xp: Number(dnaXP) || 50,
+        questions: dnaQuestions,
+        answers: dnaAnswers,
+        timestamp: Date.now()
+      });
+      alert('DNA Published!');
+      setDnaChapter(''); setDnaXP(''); setDnaQuestions(''); setDnaAnswers('');
+    } catch(err) {
+      alert('Failed to publish DNA');
+    }
+  };
+
+  const approveDNA = async (sub) => {
+    try {
+      await set(ref(database, `dna_submissions/${sub.id}/approved`), true);
+      const userRef = doc(firestore, 'users', sub.userId);
+      const userSnap = await getDoc(userRef);
+      if(userSnap.exists()) {
+        await updateDoc(userRef, { xp: (userSnap.data().xp || 0) + (sub.xp || 50) });
+      }
+      alert(`Approved! Awarded XP to ${sub.userEmail}`);
+    } catch(err) {
+      console.error(err);
+      alert('Failed to approve DNA submission');
+    }
+  };
+
   if (!unlocked) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '20px' }}>
@@ -175,6 +228,46 @@ const AdminPanel = () => {
           </form>
         </div>
 
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px', marginTop: '30px' }}>
+        {/* DNA Publisher */}
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#10b981' }}><Award size={20} /> Publish DNA Assessment</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Publish new DNA chapters for students to complete.</p>
+          <form onSubmit={publishDNA} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input type="text" value={dnaChapter} onChange={e=>setDnaChapter(e.target.value)} placeholder="Chapter Title (e.g. Chapter 2)" required style={{ flex: 2, padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <input type="number" value={dnaXP} onChange={e=>setDnaXP(e.target.value)} placeholder="XP" required style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+            </div>
+            <textarea value={dnaQuestions} onChange={e=>setDnaQuestions(e.target.value)} placeholder="Paste Questions Format Here..." required style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '120px' }}></textarea>
+            <textarea value={dnaAnswers} onChange={e=>setDnaAnswers(e.target.value)} placeholder="Paste Answer Key Format Here..." required style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '120px' }}></textarea>
+            <button type="submit" style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Publish DNA</button>
+          </form>
+        </div>
+
+        {/* DNA Submissions */}
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#8b5cf6' }}><Award size={20} /> DNA Submissions</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Review student answers and award XP.</p>
+          <div style={{ display: 'grid', gap: '10px', maxHeight: '450px', overflowY: 'auto' }}>
+            {dnaSubmissions.map(sub => (
+              <div key={sub.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '0.9rem' }}>{sub.userEmail}</span>
+                  <span style={{ color: '#10b981', fontWeight: 600, fontSize: '0.9rem' }}>{sub.chapter}</span>
+                </div>
+                <div style={{ color: '#e2e8f0', fontSize: '0.85rem', whiteSpace: 'pre-wrap', maxHeight: '150px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '6px', marginBottom: '10px' }}>
+                  {sub.answerText}
+                </div>
+                <button onClick={() => approveDNA(sub)} style={{ width: '100%', background: '#8b5cf6', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>
+                  Approve & Award {sub.xp} XP
+                </button>
+              </div>
+            ))}
+            {dnaSubmissions.length === 0 && <div style={{ color: '#64748b' }}>No pending submissions.</div>}
+          </div>
+        </div>
       </div>
 
       {/* Comment Moderation */}
