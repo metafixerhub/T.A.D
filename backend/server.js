@@ -116,5 +116,53 @@ app.get('/api/materials/download/:filename', async (req, res) => {
   }
 });
 
+// Hallo G - AI Chatbot Endpoint
+app.post('/api/ai/chat', async (req, res) => {
+  const { messages } = req.body;
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ error: "Invalid messages array" });
+  }
+
+  // Ensure this is set in your .env or Render Environment Variables!
+  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+  if (!OPENROUTER_API_KEY) {
+    return res.status(500).json({ error: "OpenRouter API Key is missing in backend configuration." });
+  }
+
+  const systemPrompt = {
+    role: "system",
+    content: "You are Hallo G, a personal coding teacher and learning assistant for AI Web Academy. Your goal is to teach web development, programming, and cybersecurity. Follow the cycle: LEARN -> EXPLAIN -> DEMONSTRATE -> PRACTICE -> CHECK -> IMPROVE. Provide simple definitions, easy explanations, real-life examples, technical explanations, and example code. Never just give away the answer; guide the student to understand it. Never make fun of beginner questions. Do not reveal secret keys or admin credentials. Keep responses formatted in clean Markdown."
+  };
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "meta-llama/llama-3.1-8b-instruct:free",
+        messages: [systemPrompt, ...messages],
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("OpenRouter API Error:", errorData);
+      return res.status(500).json({ error: "AI Provider Error", details: errorData });
+    }
+
+    const data = await response.json();
+    res.json({
+      message: data.choices[0].message.content
+    });
+  } catch (error) {
+    console.error("Error communicating with AI:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server started on port ${port}`));

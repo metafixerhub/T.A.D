@@ -12,6 +12,7 @@ import Dashboard from './components/Dashboard';
 import Project from './components/Project';
 import AdminPanel from './components/AdminPanel';
 import StoryCorner from './components/StoryCorner';
+import HalloG from './components/HalloG';
 
 import DashboardHome from './components/DashboardHome';
 
@@ -20,37 +21,40 @@ function AppContent() {
   const location = useLocation();
   const isDashboard = location.pathname.startsWith('/dashboard');
 
-  if (isDashboard) {
-    return (
-      <>
-        <Routes>
-          <Route path="/dashboard" element={<Dashboard />}>
-            <Route index element={<DashboardHome />} />
-            <Route path="admin" element={<AdminPanel />} />
-            <Route path="story-corner" element={<StoryCorner />} />
-            <Route path="live" element={<LiveSession />} />
-            <Route path="dna" element={<DNA />} />
-            <Route path="leaderboard" element={<Leaderboard />} />
-            <Route path="project" element={<Project />} />
-            <Route path="certificate" element={<Certificate />} />
-          </Route>
-        </Routes>
-        <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      </>
-    );
-  }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Navbar onLoginClick={() => setIsLoginOpen(true)} />
-      <main className="content-wrapper" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <Routes>
-          <Route path="/" element={<HeroSection />} />
-        </Routes>
-      </main>
-      <Footer />
-      <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-    </div>
+    <>
+      {isDashboard ? (
+        <>
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard />}>
+              <Route index element={<DashboardHome />} />
+              <Route path="admin" element={<AdminPanel />} />
+              <Route path="story-corner" element={<StoryCorner />} />
+              <Route path="live" element={<LiveSession />} />
+              <Route path="dna" element={<DNA />} />
+              <Route path="leaderboard" element={<Leaderboard />} />
+              <Route path="project" element={<Project />} />
+              <Route path="certificate" element={<Certificate />} />
+            </Route>
+          </Routes>
+          <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+        </>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+          <Navbar onLoginClick={() => setIsLoginOpen(true)} />
+          <main className="content-wrapper" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <Routes>
+              <Route path="/" element={<HeroSection />} />
+            </Routes>
+          </main>
+          <Footer />
+          <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+        </div>
+      )}
+      
+      {/* Global AI Chatbot */}
+      <HalloG />
+    </>
   );
 }
 
