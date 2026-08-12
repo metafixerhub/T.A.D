@@ -102,7 +102,7 @@ const HalloG = () => {
         onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
         onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
       >
-        <Sparkles size={28} />
+        <img src="/CHATBOT.LOGO.png" alt="Hallo G" style={{width: 36, height: 36, objectFit: 'contain'}} />
       </button>
     );
   }
@@ -110,15 +110,15 @@ const HalloG = () => {
   return (
     <div style={{
       position: 'fixed', bottom: '30px', right: '30px', width: '380px', height: '600px', maxHeight: '85vh',
-      background: '#1e293b', borderRadius: '20px', display: 'flex', flexDirection: 'column',
+      background: 'rgba(30, 41, 59, 0.75)', backdropFilter: 'blur(20px)', borderRadius: '20px', display: 'flex', flexDirection: 'column',
       boxShadow: '0 15px 50px rgba(0,0,0,0.5)', zIndex: 9999, overflow: 'hidden',
       border: '1px solid rgba(255,255,255,0.1)'
     }}>
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
+      <div style={{ background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.6), rgba(124, 58, 237, 0.6))', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '50%' }}>
-            <Bot size={20} />
+          <div style={{ background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="/CHATBOT.LOGO.png" alt="Hallo G" style={{width: 24, height: 24, objectFit: 'contain'}} />
           </div>
           <div>
             <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 'bold' }}>Chat with Hallo G</h3>
@@ -136,8 +136,8 @@ const HalloG = () => {
         {messages.map((msg, i) => (
           <div key={i} style={{ display: 'flex', gap: '10px', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
             {msg.role === 'assistant' && (
-              <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #14b8a6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
-                <Bot size={16} />
+              <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
+                <img src="/CHATBOT.LOGO.png" alt="Hallo G" style={{width: 18, height: 18, objectFit: 'contain'}} />
               </div>
             )}
             <div style={{
@@ -159,8 +159,8 @@ const HalloG = () => {
         ))}
         {isLoading && (
           <div style={{ display: 'flex', gap: '10px', alignSelf: 'flex-start', maxWidth: '85%' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #14b8a6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
-              <Bot size={16} />
+            <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
+              <img src="/CHATBOT.LOGO.png" alt="Hallo G" style={{width: 18, height: 18, objectFit: 'contain'}} />
             </div>
             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px 16px', borderRadius: '16px', borderBottomLeftRadius: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
               <span className="dot-flashing" style={{ letterSpacing: '2px' }}>•••</span>
@@ -186,7 +186,7 @@ const HalloG = () => {
       )}
 
       {/* Input Area */}
-      <div style={{ padding: '15px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: '#1e293b' }}>
+      <div style={{ padding: '15px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}>
         <form onSubmit={e => { e.preventDefault(); handleSend(input); }} style={{ display: 'flex', gap: '10px' }}>
           <input 
             type="text" 
