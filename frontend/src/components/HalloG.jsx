@@ -93,16 +93,16 @@ const HalloG = () => {
       <button 
         onClick={() => setIsOpen(true)}
         style={{
-          position: 'fixed', bottom: '30px', right: '30px', width: '60px', height: '60px',
-          borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #14b8a6)',
-          color: 'white', border: 'none', boxShadow: '0 10px 25px rgba(59,130,246,0.4)',
+          position: 'fixed', bottom: '30px', right: '30px', width: '70px', height: '70px',
+          borderRadius: '50%', background: 'transparent',
+          border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, transition: 'transform 0.3s'
+          zIndex: 9999, transition: 'transform 0.3s', padding: 0, overflow: 'hidden'
         }}
         onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
         onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
       >
-        <img src="/CHATBOT.LOGO.png" alt="Hallo G" style={{width: 36, height: 36, objectFit: 'contain'}} />
+        <img src="/CHATBOT.LOGO.png" alt="Hallo G" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
       </button>
     );
   }
