@@ -142,7 +142,7 @@ app.post('/api/ai/chat', async (req, res) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "google/gemma-2-9b-it:free",
+        model: "google/gemma-4-26b-a4b-it:free",
         messages: [systemPrompt, ...messages],
         temperature: 0.7
       })
