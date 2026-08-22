@@ -13,6 +13,7 @@ import Project from './components/Project';
 import AdminPanel from './components/AdminPanel';
 import StoryCorner from './components/StoryCorner';
 import HalloG from './components/HalloG';
+import Recordings from './components/Recordings';
 
 import DashboardHome from './components/DashboardHome';
 
@@ -35,6 +36,7 @@ function AppContent() {
               <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="project" element={<Project />} />
               <Route path="certificate" element={<Certificate />} />
+              <Route path="recordings" element={<Recordings />} />
             </Route>
           </Routes>
           <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />

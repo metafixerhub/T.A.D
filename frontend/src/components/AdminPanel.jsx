@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award, MonitorPlay } from 'lucide-react';
+import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award, MonitorPlay, PlayCircle } from 'lucide-react';
 import { ref, onValue, set, remove, push } from 'firebase/database';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { database, auth, firestore } from '../firebaseConfig';
@@ -47,6 +47,12 @@ const AdminPanel = () => {
   const [dnaQuestions, setDnaQuestions] = useState('');
   const [dnaAnswers, setDnaAnswers] = useState('');
   const [dnaSubmissions, setDnaSubmissions] = useState([]);
+
+  // Recordings States
+  const [recordingTitle, setRecordingTitle] = useState('');
+  const [recordingUrl, setRecordingUrl] = useState('');
+  const [recordingThumb, setRecordingThumb] = useState(null);
+  const [recordings, setRecordings] = useState([]);
 
   const API_URL = import.meta.env.VITE_BACKEND_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://t-a-d.onrender.com/api');
 
@@ -100,7 +106,18 @@ const AdminPanel = () => {
       }
     });
 
-    return () => { unsub(); unsubSub(); unsubLive(); unsubNotif(); };
+    const recRef = ref(database, 'recordings');
+    const unsubRec = onValue(recRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const recs = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        setRecordings(recs.sort((a, b) => b.timestamp - a.timestamp));
+      } else {
+        setRecordings([]);
+      }
+    });
+
+    return () => { unsub(); unsubSub(); unsubLive(); unsubNotif(); unsubRec(); };
   }, [unlocked]);
 
   const publishNotification = async (e) => {
@@ -149,6 +166,59 @@ const AdminPanel = () => {
   const deleteNotification = async (id) => {
     if(window.confirm('Delete this notification?')) {
       await remove(ref(database, `notifications/${id}`));
+    }
+  };
+
+  const publishRecording = async (e) => {
+    e.preventDefault();
+    if (!recordingTitle || !recordingUrl) return;
+    
+    setIsUploading(true);
+    let thumbUrl = null;
+    
+    try {
+      if (recordingThumb) {
+        setUploadProgress('Uploading custom thumbnail...');
+        const formData = new FormData();
+        formData.append('file', recordingThumb);
+        
+        const response = await fetch(`${API_URL}/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) throw new Error('Upload failed');
+        const data = await response.json();
+        thumbUrl = `${API_URL}/materials/download/${data.file.filename}`;
+      }
+      
+      setUploadProgress('Publishing Recording...');
+      
+      await push(ref(database, 'recordings'), {
+        title: recordingTitle,
+        url: recordingUrl,
+        thumbUrl: thumbUrl,
+        timestamp: Date.now()
+      });
+      
+      alert('Recording Published!');
+      setRecordingTitle('');
+      setRecordingUrl('');
+      setRecordingThumb(null);
+      // Reset the file input visually
+      e.target.reset(); 
+    } catch (err) {
+      console.error(err);
+      alert(`Failed to publish: ${err.message}`);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress('');
+    }
+  };
+
+  const deleteRecording = async (id) => {
+    if(window.confirm('Delete this recording?')) {
+      await remove(ref(database, `recordings/${id}`));
     }
   };
 
@@ -337,6 +407,21 @@ const AdminPanel = () => {
           </form>
         </div>
 
+        {/* Class Recordings Publisher */}
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#ec4899' }}><PlayCircle /> Publish Class Recording</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Publish a YouTube recording link for students to watch inline.</p>
+          <form onSubmit={publishRecording} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <input type="text" value={recordingTitle} onChange={e=>setRecordingTitle(e.target.value)} placeholder="Video Title" required style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <input type="url" value={recordingUrl} onChange={e=>setRecordingUrl(e.target.value)} placeholder="YouTube URL" required style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '5px' }}>Custom Thumbnail (Optional, defaults to YouTube):</div>
+            <input type="file" accept="image/*" onChange={e=>setRecordingThumb(e.target.files[0])} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <button type="submit" disabled={isUploading} style={{ background: isUploading ? '#94a3b8' : '#ec4899', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: isUploading ? 'not-allowed' : 'pointer', fontWeight: 600 }}>
+              {isUploading ? uploadProgress : 'Publish Recording'}
+            </button>
+          </form>
+        </div>
+
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px', marginTop: '30px' }}>
@@ -384,6 +469,26 @@ const AdminPanel = () => {
               <DnaSubmissionItem key={sub.id} sub={sub} approveDNA={approveDNA} declineDNA={declineDNA} />
             ))}
             {dnaSubmissions.length === 0 && <div style={{ color: '#64748b' }}>No pending submissions.</div>}
+          </div>
+        </div>
+
+        {/* Recordings Manager */}
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#ec4899' }}><PlayCircle /> Manage Recordings</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Delete old recordings.</p>
+          <div style={{ display: 'grid', gap: '10px', maxHeight: '450px', overflowY: 'auto' }}>
+            {recordings.map(rec => (
+              <div key={rec.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{new Date(rec.timestamp).toLocaleString()}</span>
+                  <button onClick={() => deleteRecording(rec.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                </div>
+                {rec.thumbUrl && <img src={rec.thumbUrl} alt="Thumbnail" style={{ width: '100%', borderRadius: '6px', marginBottom: '10px', maxHeight: '100px', objectFit: 'cover' }} />}
+                <div style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: 'bold' }}>{rec.title}</div>
+                <a href={rec.url} target="_blank" rel="noreferrer" style={{ color: '#3b82f6', fontSize: '0.8rem', wordBreak: 'break-all' }}>{rec.url}</a>
+              </div>
+            ))}
+            {recordings.length === 0 && <div style={{ color: '#64748b' }}>No recordings found.</div>}
           </div>
         </div>
       </div>

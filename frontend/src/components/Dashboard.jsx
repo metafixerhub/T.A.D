@@ -92,6 +92,7 @@ const Dashboard = () => {
   const navLinks = [
     { name: 'Dashboard', icon: <LayoutGrid size={18} />, path: '/dashboard' },
     { name: 'Live Session', icon: <MonitorPlay size={18} />, path: '/dashboard/live' },
+    { name: 'Recordings', icon: <Video size={18} />, path: '/dashboard/recordings' },
     { name: 'Story Corner', icon: <Award size={18} />, path: '/dashboard/story-corner' },
     { name: 'DNA', icon: <HelpCircle size={18} />, path: '/dashboard/dna' },
     { name: 'Final Project', icon: <Award size={18} />, path: '/dashboard/project' },
