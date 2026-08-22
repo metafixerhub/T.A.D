@@ -102,7 +102,7 @@ const DashboardHome = () => {
       {/* 1. HERO BANNER */}
       <div style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)', borderRadius: '20px', padding: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white', position: 'relative', overflow: 'hidden', boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)' }}>
         <div style={{ position: 'absolute', right: '-10%', top: '-50%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%)', borderRadius: '50%' }}></div>
-        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ position: 'relative', zIndex: 1, flex: 1 }}>
           <p style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#e0e7ff', fontWeight: 500 }}>Welcome back,</p>
           <h1 style={{ margin: '0 0 10px 0', fontSize: '2.5rem', fontWeight: 800 }}>
             {auth.currentUser ? (auth.currentUser.email.split('@')[0]) : 'Student'} <span style={{ fontSize: '2rem' }}>👋</span>
@@ -113,6 +113,11 @@ const DashboardHome = () => {
           </button>
         </div>
         
+        {/* Book Graphic */}
+        <div style={{ position: 'relative', zIndex: 1, margin: '0 20px', mixBlendMode: 'screen' }}>
+          <img src="/hero-books.jpg" alt="Study Books" style={{ height: '140px', objectFit: 'contain', borderRadius: '12px' }} />
+        </div>
+
         {/* Total XP Floating Box */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', zIndex: 1, background: 'white', padding: '25px 35px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.2)', color: '#1e293b', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
           <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Total XP</span>

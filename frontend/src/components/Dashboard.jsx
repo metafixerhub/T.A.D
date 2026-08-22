@@ -144,17 +144,9 @@ const Dashboard = () => {
             </div>
             <LogOut size={20} color="#ef4444" style={{ cursor: 'pointer' }} onClick={handleLogout} />
           </div>
-          <button onClick={() => navigate('/dashboard/admin')} style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#94a3b8', fontSize: '0.8rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', cursor: 'pointer', marginBottom: '20px' }}>
+          <button onClick={() => navigate('/dashboard/admin')} style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#94a3b8', fontSize: '0.8rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
             <ShieldAlert size={14} /> Admin Access
           </button>
-
-          {/* Go Premium Card */}
-          <div style={{ background: 'linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9))', borderRadius: '12px', padding: '20px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
-            <Award size={28} color="#f59e0b" style={{ marginBottom: '10px' }} />
-            <h4 style={{ margin: '0 0 5px 0', color: '#f8fafc', fontSize: '0.95rem' }}>Go Premium</h4>
-            <p style={{ margin: '0 0 15px 0', fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.4' }}>Unlock all features and premium content</p>
-            <button style={{ background: '#3b82f6', color: 'white', border: 'none', borderRadius: '20px', padding: '8px 20px', fontSize: '0.8rem', fontWeight: 600, width: '100%', cursor: 'pointer' }}>Upgrade Now</button>
-          </div>
         </div>
       </aside>
 
