@@ -61,6 +61,12 @@ const AdminPanel = () => {
   const [recordingThumb, setRecordingThumb] = useState(null);
   const [recordings, setRecordings] = useState([]);
 
+  // Calendar States
+  const [calTitle, setCalTitle] = useState('');
+  const [calDate, setCalDate] = useState('');
+  const [calTime, setCalTime] = useState('');
+  const [calType, setCalType] = useState('Live'); // 'Live' or 'Recorded'
+
   const API_URL = import.meta.env.VITE_BACKEND_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://t-a-d.onrender.com/api');
 
   const handleUnlock = (e) => {
@@ -260,6 +266,28 @@ const AdminPanel = () => {
       setIsUploading(false);
       setUploadProgress('');
     }
+  };
+
+  const publishCalendarEvent = async (e) => {
+    e.preventDefault();
+    if (!calTitle || !calDate || !calTime) return;
+    setIsUploading(true);
+    try {
+      await push(ref(database, 'calendar_events'), {
+        title: calTitle,
+        date: calDate,
+        time: calTime,
+        type: calType,
+        timestamp: Date.now()
+      });
+      setCalTitle('');
+      setCalDate('');
+      setCalTime('');
+      alert('Calendar Event Published!');
+    } catch(err) {
+      alert('Failed to publish event');
+    }
+    setIsUploading(false);
   };
 
   const deleteRecording = async (id) => {
@@ -475,6 +503,27 @@ const AdminPanel = () => {
             <input type="file" accept="image/*" onChange={e=>setRecordingThumb(e.target.files[0])} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
             <button type="submit" disabled={isUploading} style={{ background: isUploading ? '#94a3b8' : '#ec4899', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: isUploading ? 'not-allowed' : 'pointer', fontWeight: 600 }}>
               {isUploading ? uploadProgress : 'Publish Recording'}
+            </button>
+          </form>
+        </div>
+
+        {/* Publish Calendar Event */}
+        <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '25px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#3b82f6' }}><Award size={20} /> Publish Calendar Event</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Add a new event to the student calendar.</p>
+          <form onSubmit={publishCalendarEvent} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <input type="text" value={calTitle} onChange={e=>setCalTitle(e.target.value)} placeholder="Class Title (e.g., Python Advanced)" required style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input type="date" value={calDate} onChange={e=>setCalDate(e.target.value)} required style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <input type="text" value={calTime} onChange={e=>setCalTime(e.target.value)} placeholder="Time (10:00 AM)" required style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
+            </div>
+            <select value={calType} onChange={e=>setCalType(e.target.value)} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}>
+              <option value="Live">Live Session</option>
+              <option value="Recorded">Recorded Session</option>
+              <option value="Deadline">Deadline</option>
+            </select>
+            <button type="submit" disabled={isUploading} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+              Publish to Calendar
             </button>
           </form>
         </div>
