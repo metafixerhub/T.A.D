@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ref, onValue, push, set } from 'firebase/database';
 import { database, auth } from '../firebaseConfig';
 import { Award, CheckCircle, Clock, Check, X as XIcon, HelpCircle, FileText } from 'lucide-react';
-import { API_URL } from '../config';
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://t-a-d.onrender.com/api');
 
 const AFP = () => {
   const [assessments, setAssessments] = useState([]);
