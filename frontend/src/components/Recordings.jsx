@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebaseConfig';
-import { PlayCircle, Video, Clock } from 'lucide-react';
+import { PlayCircle, Video, Clock, X } from 'lucide-react';
 
 // Helper function to extract YouTube ID
 const getYouTubeID = (url) => {
@@ -49,7 +49,6 @@ const Recordings = () => {
             const videoId = getYouTubeID(rec.url);
             const defaultThumb = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '/logo.png';
             const thumbnail = rec.thumbUrl || defaultThumb;
-            const isPlaying = activeVideo === rec.id;
 
             return (
               <div key={rec.id} style={{ 
@@ -60,46 +59,32 @@ const Recordings = () => {
                 boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
                 transition: 'transform 0.3s ease',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                cursor: 'pointer'
               }}
-              onMouseOver={e => !isPlaying && (e.currentTarget.style.transform = 'translateY(-5px)')}
-              onMouseOut={e => !isPlaying && (e.currentTarget.style.transform = 'translateY(0)')}
+              onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'}
+              onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+              onClick={() => {
+                if (!videoId) {
+                  window.open(rec.url, '_blank');
+                } else {
+                  setActiveVideo({ ...rec, videoId });
+                }
+              }}
               >
                 {/* Video Area */}
                 <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: 'black' }}>
-                  {isPlaying && videoId ? (
-                    <iframe 
-                      width="100%" 
-                      height="100%" 
-                      src={`https://www.youtube.com/embed/${videoId}?autoplay=1`} 
-                      title={rec.title}
-                      frameBorder="0" 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                      allowFullScreen
-                      style={{ border: 'none' }}
-                    ></iframe>
-                  ) : (
-                    <>
-                      <img src={thumbnail} alt={rec.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
-                      <div 
-                        onClick={() => {
-                          if (!videoId) {
-                            window.open(rec.url, '_blank');
-                          } else {
-                            setActiveVideo(rec.id);
-                          }
-                        }}
-                        style={{ 
-                          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', background: 'rgba(0,0,0,0.3)'
-                        }}
-                        className="play-button-overlay"
-                      >
-                        <PlayCircle size={60} color="white" strokeWidth={1.5} style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))' }} />
-                      </div>
-                    </>
-                  )}
+                  <img src={thumbnail} alt={rec.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
+                  <div 
+                    style={{ 
+                      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'rgba(0,0,0,0.3)'
+                    }}
+                    className="play-button-overlay"
+                  >
+                    <PlayCircle size={60} color="white" strokeWidth={1.5} style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))' }} />
+                  </div>
                 </div>
 
                 {/* Details Area */}
@@ -112,6 +97,42 @@ const Recordings = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Fullscreen Video Modal */}
+      {activeVideo && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)'
+        }}>
+          {/* Header/Close bar */}
+          <div style={{ position: 'absolute', top: '20px', right: '30px', left: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ color: 'white', margin: 0, fontSize: '1.2rem', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '80%' }}>{activeVideo.title}</h2>
+            <button 
+              onClick={() => setActiveVideo(null)}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s' }}
+              onMouseOver={e => e.currentTarget.style.background = 'rgba(239,68,68,0.8)'}
+              onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            >
+              <X size={24} />
+            </button>
+          </div>
+          
+          {/* Iframe Container */}
+          <div style={{ width: '90%', maxWidth: '1400px', aspectRatio: '16/9', background: 'black', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+            <iframe 
+              width="100%" 
+              height="100%" 
+              src={`https://www.youtube.com/embed/${activeVideo.videoId}?autoplay=1`} 
+              title={activeVideo.title}
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowFullScreen
+              style={{ border: 'none' }}
+            ></iframe>
+          </div>
         </div>
       )}
     </div>
