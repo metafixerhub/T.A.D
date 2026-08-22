@@ -114,8 +114,8 @@ const DashboardHome = () => {
         </div>
         
         {/* Book Graphic */}
-        <div style={{ position: 'relative', zIndex: 1, margin: '0 20px', mixBlendMode: 'screen' }}>
-          <img src="/hero-books.jpg" alt="Study Books" style={{ height: '140px', objectFit: 'contain', borderRadius: '12px' }} />
+        <div style={{ position: 'relative', zIndex: 1, margin: '0 20px' }}>
+          <img src="/hero-books.png" alt="Study Books" style={{ height: '140px', objectFit: 'contain', borderRadius: '12px' }} />
         </div>
 
         {/* Total XP Floating Box */}
