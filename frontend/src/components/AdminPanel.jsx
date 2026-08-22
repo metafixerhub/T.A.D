@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award, MonitorPlay, PlayCircle } from 'lucide-react';
 import { ref, onValue, set, remove, push } from 'firebase/database';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { database, auth, firestore } from '../firebaseConfig';
 
 const AfpSubmissionItem = ({ sub, approveAfp, declineAfp }) => {
@@ -54,6 +54,7 @@ const AdminPanel = () => {
 
   // Student Video Progress
   const [studentProgress, setStudentProgress] = useState({});
+  const [users, setUsers] = useState([]);
 
   // Recordings States
   const [recordingTitle, setRecordingTitle] = useState('');
@@ -150,6 +151,18 @@ const AdminPanel = () => {
     const unsubProg = onValue(progRef, (snapshot) => {
       setStudentProgress(snapshot.val() || {});
     });
+
+    const fetchUsers = async () => {
+      try {
+        const snapshot = await getDocs(collection(firestore, 'users'));
+        const usersList = [];
+        snapshot.forEach(doc => usersList.push({ id: doc.id, ...doc.data() }));
+        setUsers(usersList);
+      } catch (e) {
+        console.error("Failed to fetch users", e);
+      }
+    };
+    fetchUsers();
 
     return () => { unsub(); unsubSub(); unsubLive(); unsubNotif(); unsubRec(); unsubStory(); unsubAfp(); unsubProg(); };
   }, [unlocked]);
