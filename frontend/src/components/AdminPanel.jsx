@@ -45,7 +45,6 @@ const AdminPanel = () => {
   const [dnaChapter, setDnaChapter] = useState('');
   const [dnaXP, setDnaXP] = useState('');
   const [dnaQuestions, setDnaQuestions] = useState('');
-  const [dnaAnswers, setDnaAnswers] = useState('');
   const [dnaSubmissions, setDnaSubmissions] = useState([]);
   const [afpAssessments, setAfpAssessments] = useState([]);
 
@@ -359,11 +358,10 @@ const AdminPanel = () => {
         chapter: dnaChapter,
         xp: Number(dnaXP) || 50,
         questions: dnaQuestions,
-        answers: dnaAnswers,
         timestamp: Date.now()
       });
       alert('AFP Assignment Published!');
-      setDnaChapter(''); setDnaXP(''); setDnaQuestions(''); setDnaAnswers('');
+      setDnaChapter(''); setDnaXP(''); setDnaQuestions('');
     } catch(err) {
       alert('Failed to publish AFP');
     }
@@ -514,7 +512,6 @@ const AdminPanel = () => {
               <input type="number" value={dnaXP} onChange={e=>setDnaXP(e.target.value)} placeholder="XP" required style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
             </div>
             <textarea value={dnaQuestions} onChange={e=>setDnaQuestions(e.target.value)} placeholder="Paste Questions Format Here..." required style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '120px' }}></textarea>
-            <textarea value={dnaAnswers} onChange={e=>setDnaAnswers(e.target.value)} placeholder="Paste Answer Key Format Here..." required style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '120px' }}></textarea>
             <button type="submit" style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Publish AFP</button>
           </form>
         </div>
