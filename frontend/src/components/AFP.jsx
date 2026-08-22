@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ref, onValue, push } from 'firebase/database';
 import { database, auth } from '../firebaseConfig';
 import { Target, Timer, ChevronLeft, ChevronRight, Bookmark, MoreVertical, FileText, CheckCircle, X as XIcon } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://t-a-d.onrender.com/api');
 
 const AFP = () => {
+  const { id, mode } = useParams();
+  const navigate = useNavigate();
+
   const [assessments, setAssessments] = useState([]);
-  const [selectedAfp, setSelectedAfp] = useState(null);
-  const [mode, setMode] = useState(null); // 'practice' or 'quiz'
   
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [answers, setAnswers] = useState({}); // { qIndex: value }
@@ -32,10 +34,10 @@ const AFP = () => {
             try {
               parsedData.questionsList = JSON.parse(parsedData.questions);
             } catch (e) {
-              parsedData.isOldFormat = true;
+              parsedData.questionsList = []; // SAFE FALLBACK
             }
           } else {
-            parsedData.questionsList = parsedData.questions;
+            parsedData.questionsList = parsedData.questions || [];
           }
           return { id: key, ...parsedData };
         });
@@ -83,14 +85,15 @@ const AFP = () => {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleModeSelect = (afp, selectedMode) => {
-    setSelectedAfp(afp);
-    setMode(selectedMode);
+  const selectedAfp = assessments.find(a => a.id === id);
+
+  const handleModeSelect = (selectedMode) => {
     setCurrentQIndex(0);
     setAnswers({});
     setFeedback({});
     setQuizResults(null);
     setTimeElapsed(0);
+    navigate(`/dashboard/afp/${id}/${selectedMode}`);
   };
 
   const checkPracticeAnswer = async () => {
@@ -186,9 +189,25 @@ const AFP = () => {
   };
 
   // --- RENDER EXAM UI (LIGHT THEME MATCHING SCREENSHOT) ---
-  if (selectedAfp && mode) {
-    const qList = selectedAfp.questionsList;
+  if (id && mode) {
+    if (!selectedAfp) return <div style={{ color: 'white', padding: '50px', textAlign: 'center' }}>Loading Assignment...</div>;
+    
+    const qList = selectedAfp.questionsList || [];
+    
+    if (qList.length === 0) {
+      return (
+        <div style={{ padding: '50px', textAlign: 'center', color: 'white', maxWidth: '600px', margin: '0 auto' }}>
+          <h2 style={{ color: '#ef4444' }}>Invalid Assignment Format</h2>
+          <p style={{ color: '#94a3b8', marginBottom: '30px' }}>This assignment has corrupted or missing questions and cannot be started.</p>
+          <button onClick={() => navigate('/dashboard/afp')} style={{ padding: '12px 30px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Return to Assignments</button>
+        </div>
+      );
+    }
+
     const currentQ = qList[currentQIndex];
+    if (!currentQ) {
+      return <div style={{ padding: '50px', color: 'white', textAlign: 'center' }}>Question not found.</div>;
+    }
     
     // Calculate Stats for right panel
     const totalQ = qList.length;
@@ -209,7 +228,7 @@ const AFP = () => {
         
         {/* HEADER */}
         <div style={{ height: '70px', background: 'white', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 30px' }}>
-          <button onClick={() => setSelectedAfp(null)} style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 600, color: '#475569' }}>
+          <button onClick={() => navigate(`/dashboard/afp/${id}`)} style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 600, color: '#475569' }}>
             <ChevronLeft size={20} /> Back
           </button>
           
@@ -230,7 +249,7 @@ const AFP = () => {
               </h1>
               <p style={{ fontSize: '1.5rem', margin: '0 0 10px 0' }}>Score: <strong>{quizResults.score}%</strong></p>
               <p style={{ color: '#64748b', marginBottom: '30px' }}>{quizResults.passed ? `You earned ${selectedAfp.xp} XP!` : 'You need 60% to pass. Try again.'}</p>
-              <button onClick={() => setSelectedAfp(null)} style={{ background: '#6366f1', color: 'white', padding: '12px 30px', border: 'none', borderRadius: '8px', fontSize: '1rem', cursor: 'pointer', fontWeight: 600 }}>Return to Dashboard</button>
+              <button onClick={() => navigate('/dashboard/afp')} style={{ background: '#6366f1', color: 'white', padding: '12px 30px', border: 'none', borderRadius: '8px', fontSize: '1rem', cursor: 'pointer', fontWeight: 600 }}>Return to Dashboard</button>
             </div>
           </div>
         ) : (
@@ -383,17 +402,17 @@ const AFP = () => {
         <FileText color="#3b82f6" size={32} /> Assignments for Practice Exam (AFP)
       </h1>
 
-      {selectedAfp && !mode ? (
+      {id && !mode ? (
         // MODE SELECTION UI (Yellow & Blue Cards matching Screenshot 1)
         <div style={{ maxWidth: '600px', margin: '0 auto', background: 'white', padding: '40px', borderRadius: '16px', color: '#1e293b' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
             <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Select a Mode</h2>
-            <button onClick={() => setSelectedAfp(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><XIcon /></button>
+            <button onClick={() => navigate('/dashboard/afp')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><XIcon /></button>
           </div>
           
           {/* Practice Mode Card */}
           <div 
-            onClick={() => handleModeSelect(selectedAfp, 'practice')}
+            onClick={() => handleModeSelect('practice')}
             style={{ 
               background: '#fef9c3', // light yellow
               border: '2px solid #fde047',
@@ -424,7 +443,7 @@ const AFP = () => {
 
           {/* Quiz Mode Card */}
           <div 
-            onClick={() => handleModeSelect(selectedAfp, 'quiz')}
+            onClick={() => handleModeSelect('quiz')}
             style={{ 
               background: '#f0f9ff', // light blue
               border: '2px solid #bae6fd',
@@ -471,7 +490,7 @@ const AFP = () => {
                     <span>Completed (Score: {sub.score}%)</span>
                   </div>
                 ) : (
-                  <button onClick={() => setSelectedAfp(afp)} style={{ width: '100%', marginTop: '15px', padding: '12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+                  <button onClick={() => navigate(`/dashboard/afp/${afp.id}`)} style={{ width: '100%', marginTop: '15px', padding: '12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
                     Start Assignment
                   </button>
                 )}

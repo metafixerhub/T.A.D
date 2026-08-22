@@ -33,6 +33,8 @@ function AppContent() {
               <Route path="story-corner" element={<StoryCorner />} />
               <Route path="live" element={<LiveSession />} />
               <Route path="afp" element={<AFP />} />
+              <Route path="afp/:id" element={<AFP />} />
+              <Route path="afp/:id/:mode" element={<AFP />} />
               <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="project" element={<Project />} />
               <Route path="certificate" element={<Certificate />} />
