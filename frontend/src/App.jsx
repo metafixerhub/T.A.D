@@ -6,7 +6,7 @@ import LoginBar from './components/LoginBar';
 import Footer from './components/Footer';
 import Certificate from './components/Certificate';
 import LiveSession from './components/LiveSession';
-import DNA from './components/DNA';
+import AFP from './components/AFP';
 import Leaderboard from './components/Leaderboard';
 import Dashboard from './components/Dashboard';
 import Project from './components/Project';
@@ -32,7 +32,7 @@ function AppContent() {
               <Route path="admin" element={<AdminPanel />} />
               <Route path="story-corner" element={<StoryCorner />} />
               <Route path="live" element={<LiveSession />} />
-              <Route path="dna" element={<DNA />} />
+              <Route path="afp" element={<AFP />} />
               <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="project" element={<Project />} />
               <Route path="certificate" element={<Certificate />} />

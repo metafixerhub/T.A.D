@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebaseConfig';
-import { PlayCircle, Video, Clock, X } from 'lucide-react';
+import { PlayCircle, Video, Clock, X, CheckCircle2 } from 'lucide-react';
+import YouTube from 'react-youtube';
 
 // Helper function to extract YouTube ID
 const getYouTubeID = (url) => {
@@ -13,6 +14,9 @@ const getYouTubeID = (url) => {
 const Recordings = () => {
   const [recordings, setRecordings] = useState([]);
   const [activeVideo, setActiveVideo] = useState(null); // stores the currently playing video id
+  const [userProgress, setUserProgress] = useState({});
+  const playerRef = React.useRef(null);
+  const progressIntervalRef = React.useRef(null);
 
   useEffect(() => {
     const recRef = ref(database, 'recordings');
@@ -25,8 +29,68 @@ const Recordings = () => {
         setRecordings([]);
       }
     });
+
+    if (auth.currentUser) {
+      const progRef = ref(database, `video_progress/${auth.currentUser.uid}`);
+      const unsubProg = onValue(progRef, (snapshot) => {
+        if (snapshot.val()) {
+          setUserProgress(snapshot.val());
+        }
+      });
+      return () => { unsub(); unsubProg(); };
+    }
+    
     return () => unsub();
   }, []);
+
+  const handlePlayerReady = (event) => {
+    playerRef.current = event.target;
+  };
+
+  const handleStateChange = (event) => {
+    // Playing (1)
+    if (event.data === 1) {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = setInterval(saveProgress, 5000);
+    } else {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      saveProgress();
+    }
+  };
+
+  const saveProgress = async () => {
+    if (!playerRef.current || !activeVideo || !auth.currentUser) return;
+    try {
+      const current = playerRef.current.getCurrentTime();
+      const duration = playerRef.current.getDuration();
+      if (duration > 0) {
+        let pct = Math.floor((current / duration) * 100);
+        if (pct > 100) pct = 100;
+        
+        // Prevent lowering progress if they rewind
+        const existingPct = userProgress[activeVideo.id]?.percent || 0;
+        if (pct >= existingPct || pct > 95) { // If > 95, count as 100
+          if (pct > 95) pct = 100;
+          
+          import('firebase/database').then(({ set, ref }) => {
+            set(ref(database, `video_progress/${auth.currentUser.uid}/${activeVideo.id}`), {
+              percent: pct,
+              lastUpdated: Date.now(),
+              videoTitle: activeVideo.title
+            });
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const closePlayer = () => {
+    saveProgress();
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    setActiveVideo(null);
+  };
 
   return (
     <div style={{ padding: '30px', color: 'white', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
@@ -60,7 +124,8 @@ const Recordings = () => {
                 transition: 'transform 0.3s ease',
                 display: 'flex',
                 flexDirection: 'column',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                position: 'relative'
               }}
               onMouseOver={e => e.currentTarget.style.transform = 'translateY(-5px)'}
               onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
@@ -72,6 +137,14 @@ const Recordings = () => {
                 }
               }}
               >
+                {/* Progress Bar Badge */}
+                {userProgress[rec.id] && (
+                  <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 10, background: userProgress[rec.id].percent === 100 ? '#10b981' : '#f59e0b', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
+                    {userProgress[rec.id].percent === 100 ? <CheckCircle2 size={12} /> : null}
+                    {userProgress[rec.id].percent}% Watched
+                  </div>
+                )}
+                
                 {/* Video Area */}
                 <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: 'black' }}>
                   <img src={thumbnail} alt={rec.title} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
@@ -111,7 +184,7 @@ const Recordings = () => {
           <div style={{ position: 'absolute', top: '20px', right: '30px', left: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ color: 'white', margin: 0, fontSize: '1.2rem', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '80%' }}>{activeVideo.title}</h2>
             <button 
-              onClick={() => setActiveVideo(null)}
+              onClick={closePlayer}
               style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s' }}
               onMouseOver={e => e.currentTarget.style.background = 'rgba(239,68,68,0.8)'}
               onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
@@ -122,16 +195,14 @@ const Recordings = () => {
           
           {/* Iframe Container */}
           <div style={{ width: '90%', maxWidth: '1400px', aspectRatio: '16/9', background: 'black', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
-            <iframe 
-              width="100%" 
-              height="100%" 
-              src={`https://www.youtube.com/embed/${activeVideo.videoId}?autoplay=1`} 
-              title={activeVideo.title}
-              frameBorder="0" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-              allowFullScreen
-              style={{ border: 'none' }}
-            ></iframe>
+            <YouTube 
+              videoId={activeVideo.videoId} 
+              opts={{ width: '100%', height: '100%', playerVars: { autoplay: 1, rel: 0, modestbranding: 1 } }} 
+              onReady={handlePlayerReady} 
+              onStateChange={handleStateChange}
+              style={{ width: '100%', height: '100%' }}
+              iframeClassName="youtube-iframe-full"
+            />
           </div>
         </div>
       )}

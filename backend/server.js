@@ -164,5 +164,46 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 });
 
+// Auto-Grading Endpoint
+app.post('/api/ai/grade', async (req, res) => {
+  const { question, answer, expectedAnswer } = req.body;
+  
+  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+  if (!OPENROUTER_API_KEY) return res.status(500).json({ error: "Missing API Key" });
+
+  const systemPrompt = {
+    role: "system",
+    content: `You are an automated grader for a coding exam. 
+    You will be given a Question, a Student's Answer, and an Expected Answer/Context.
+    You must evaluate if the Student's Answer is substantially correct.
+    Respond ONLY in JSON format: {"correct": true|false, "feedback": "Short 1-sentence explanation"}`
+  };
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "google/gemma-4-26b-a4b-it:free",
+        response_format: { type: "json_object" },
+        messages: [
+          systemPrompt,
+          { role: "user", content: `Question: ${question}\nExpected: ${expectedAnswer}\nStudent Answer: ${answer}` }
+        ]
+      })
+    });
+
+    const data = await response.json();
+    const result = JSON.parse(data.choices[0].message.content);
+    res.json(result);
+  } catch (err) {
+    console.error("Grader Error:", err);
+    res.status(500).json({ error: "Failed to grade answer" });
+  }
+});
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server started on port ${port}`));

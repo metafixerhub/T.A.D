@@ -4,7 +4,7 @@ import { ref, onValue, set, remove, push } from 'firebase/database';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { database, auth, firestore } from '../firebaseConfig';
 
-const DnaSubmissionItem = ({ sub, approveDNA, declineDNA }) => {
+const AfpSubmissionItem = ({ sub, approveAfp, declineAfp }) => {
   const [customXp, setCustomXp] = useState(sub.xp || 50);
   return (
     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -18,8 +18,8 @@ const DnaSubmissionItem = ({ sub, approveDNA, declineDNA }) => {
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <input type="number" value={customXp} onChange={e=>setCustomXp(e.target.value)} style={{ width: '80px', padding: '8px', borderRadius: '6px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
         <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>XP</span>
-        <button onClick={() => approveDNA(sub, Number(customXp))} style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Approve</button>
-        <button onClick={() => declineDNA(sub)} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Decline</button>
+        <button onClick={() => approveAfp(sub, Number(customXp))} style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Approve</button>
+        <button onClick={() => declineAfp(sub)} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Decline</button>
       </div>
     </div>
   );
@@ -41,12 +41,19 @@ const AdminPanel = () => {
   const [uploadProgress, setUploadProgress] = useState('');
   const [isLiveActive, setIsLiveActive] = useState(false);
 
-  // DNA States
+  // AFP (DNA) States
   const [dnaChapter, setDnaChapter] = useState('');
   const [dnaXP, setDnaXP] = useState('');
   const [dnaQuestions, setDnaQuestions] = useState('');
   const [dnaAnswers, setDnaAnswers] = useState('');
   const [dnaSubmissions, setDnaSubmissions] = useState([]);
+  const [afpAssessments, setAfpAssessments] = useState([]);
+
+  // Story states for manager
+  const [stories, setStories] = useState([]);
+
+  // Student Video Progress
+  const [studentProgress, setStudentProgress] = useState({});
 
   // Recordings States
   const [recordingTitle, setRecordingTitle] = useState('');
@@ -117,7 +124,34 @@ const AdminPanel = () => {
       }
     });
 
-    return () => { unsub(); unsubSub(); unsubLive(); unsubNotif(); unsubRec(); };
+    const storyRef = ref(database, 'story_corner');
+    const unsubStory = onValue(storyRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const list = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        setStories(list.sort((a, b) => b.timestamp - a.timestamp));
+      } else {
+        setStories([]);
+      }
+    });
+
+    const afpRef = ref(database, 'dna_assessments');
+    const unsubAfp = onValue(afpRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const list = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        setAfpAssessments(list.sort((a, b) => b.timestamp - a.timestamp));
+      } else {
+        setAfpAssessments([]);
+      }
+    });
+
+    const progRef = ref(database, 'video_progress');
+    const unsubProg = onValue(progRef, (snapshot) => {
+      setStudentProgress(snapshot.val() || {});
+    });
+
+    return () => { unsub(); unsubSub(); unsubLive(); unsubNotif(); unsubRec(); unsubStory(); unsubAfp(); unsubProg(); };
   }, [unlocked]);
 
   const publishNotification = async (e) => {
@@ -228,6 +262,18 @@ const AdminPanel = () => {
     }
   };
 
+  const deleteStory = async (id) => {
+    if(window.confirm('Delete this Story Corner post?')) {
+      await remove(ref(database, `story_corner/${id}`));
+    }
+  };
+
+  const deleteAfp = async (id) => {
+    if(window.confirm('Delete this AFP Assignment?')) {
+      await remove(ref(database, `dna_assessments/${id}`));
+    }
+  };
+
   const postToStoryCorner = async (e) => {
     e.preventDefault();
     if (!storyText && storyFiles.length === 0) return;
@@ -292,7 +338,7 @@ const AdminPanel = () => {
     }
   };
 
-  const publishDNA = async (e) => {
+  const publishAFP = async (e) => {
     e.preventDefault();
     if(!dnaChapter || !dnaQuestions) return;
     try {
@@ -303,14 +349,14 @@ const AdminPanel = () => {
         answers: dnaAnswers,
         timestamp: Date.now()
       });
-      alert('DNA Published!');
+      alert('AFP Assignment Published!');
       setDnaChapter(''); setDnaXP(''); setDnaQuestions(''); setDnaAnswers('');
     } catch(err) {
-      alert('Failed to publish DNA');
+      alert('Failed to publish AFP');
     }
   };
 
-  const approveDNA = async (sub, customXpAmount) => {
+  const approveAfp = async (sub, customXpAmount) => {
     try {
       await set(ref(database, `dna_submissions/${sub.id}/approved`), true);
       const userRef = doc(firestore, 'users', sub.userId);
@@ -323,11 +369,11 @@ const AdminPanel = () => {
       alert(`Approved! Awarded ${customXpAmount} XP to ${sub.userEmail}`);
     } catch(err) {
       console.error(err);
-      alert(`Failed to approve DNA submission: ${err.message}`);
+      alert(`Failed to approve AFP submission: ${err.message}`);
     }
   };
 
-  const declineDNA = async (sub) => {
+  const declineAfp = async (sub) => {
     if(window.confirm('Are you sure you want to decline and delete this submission?')) {
       try {
         await remove(ref(database, `dna_submissions/${sub.id}`));
@@ -445,28 +491,28 @@ const AdminPanel = () => {
             {notifications.length === 0 && <div style={{ color: '#64748b' }}>No notifications found.</div>}
           </div>
         </div>
-        {/* DNA Publisher */}
+        {/* AFP Publisher */}
         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#10b981' }}><Award size={20} /> Publish DNA Assessment</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Publish new DNA chapters for students to complete.</p>
-          <form onSubmit={publishDNA} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#10b981' }}><Award size={20} /> Publish AFP Assessment</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Publish new AFP assignments for students to complete.</p>
+          <form onSubmit={publishAFP} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
               <input type="text" value={dnaChapter} onChange={e=>setDnaChapter(e.target.value)} placeholder="Chapter Title (e.g. Chapter 2)" required style={{ flex: 2, padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
               <input type="number" value={dnaXP} onChange={e=>setDnaXP(e.target.value)} placeholder="XP" required style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }} />
             </div>
             <textarea value={dnaQuestions} onChange={e=>setDnaQuestions(e.target.value)} placeholder="Paste Questions Format Here..." required style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '120px' }}></textarea>
             <textarea value={dnaAnswers} onChange={e=>setDnaAnswers(e.target.value)} placeholder="Paste Answer Key Format Here..." required style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minHeight: '120px' }}></textarea>
-            <button type="submit" style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Publish DNA</button>
+            <button type="submit" style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Publish AFP</button>
           </form>
         </div>
 
-        {/* DNA Submissions */}
+        {/* AFP Submissions */}
         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#8b5cf6' }}><Award size={20} /> DNA Submissions</h3>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#8b5cf6' }}><Award size={20} /> AFP Submissions</h3>
           <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Review student answers and award XP.</p>
           <div style={{ display: 'grid', gap: '10px', maxHeight: '450px', overflowY: 'auto' }}>
             {dnaSubmissions.map(sub => (
-              <DnaSubmissionItem key={sub.id} sub={sub} approveDNA={approveDNA} declineDNA={declineDNA} />
+              <AfpSubmissionItem key={sub.id} sub={sub} approveAfp={approveAfp} declineAfp={declineAfp} />
             ))}
             {dnaSubmissions.length === 0 && <div style={{ color: '#64748b' }}>No pending submissions.</div>}
           </div>
@@ -491,6 +537,84 @@ const AdminPanel = () => {
             {recordings.length === 0 && <div style={{ color: '#64748b' }}>No recordings found.</div>}
           </div>
         </div>
+
+        {/* Story Corner Manager */}
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#3b82f6' }}><ImageIcon /> Manage Story Corner</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Delete old Story Corner posts.</p>
+          <div style={{ display: 'grid', gap: '10px', maxHeight: '450px', overflowY: 'auto' }}>
+            {stories.map(story => (
+              <div key={story.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{new Date(story.timestamp).toLocaleString()}</span>
+                  <button onClick={() => deleteStory(story.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                </div>
+                <div style={{ color: '#e2e8f0', fontSize: '0.95rem' }}>{story.text}</div>
+                {story.attachments && story.attachments.length > 0 && <span style={{ color: '#3b82f6', fontSize: '0.8rem' }}>{story.attachments.length} attachment(s)</span>}
+              </div>
+            ))}
+            {stories.length === 0 && <div style={{ color: '#64748b' }}>No stories found.</div>}
+          </div>
+        </div>
+
+        {/* AFP Manager */}
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#10b981' }}><Award /> Manage AFP Assignments</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Delete old assignments.</p>
+          <div style={{ display: 'grid', gap: '10px', maxHeight: '450px', overflowY: 'auto' }}>
+            {afpAssessments.map(afp => (
+              <div key={afp.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{new Date(afp.timestamp).toLocaleString()}</span>
+                  <button onClick={() => deleteAfp(afp.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                </div>
+                <div style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: 'bold' }}>{afp.chapter || afp.title}</div>
+                <span style={{ color: '#10b981', fontSize: '0.8rem' }}>{afp.xp} XP</span>
+              </div>
+            ))}
+            {afpAssessments.length === 0 && <div style={{ color: '#64748b' }}>No assignments found.</div>}
+          </div>
+        </div>
+      </div>
+
+      {/* Student Video Progress */}
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: '15px', margin: '40px 0 20px 0', color: '#f8fafc', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <PlayCircle color="#f59e0b" /> Student Video Progress
+      </h2>
+      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left', color: '#94a3b8' }}>
+              <th style={{ padding: '12px' }}>Student</th>
+              <th style={{ padding: '12px' }}>Video Name</th>
+              <th style={{ padding: '12px' }}>Progress</th>
+              <th style={{ padding: '12px' }}>Last Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.length > 0 ? users.map(u => {
+              const userVids = studentProgress[u.id];
+              if (!userVids) return null;
+              return Object.entries(userVids).map(([vidId, prog]) => (
+                <tr key={`${u.id}-${vidId}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: '12px' }}>{u.email}</td>
+                  <td style={{ padding: '12px', color: '#3b82f6' }}>{prog.videoTitle || 'Unknown Video'}</td>
+                  <td style={{ padding: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ flex: 1, background: 'rgba(255,255,255,0.1)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ background: prog.percent === 100 ? '#10b981' : '#f59e0b', width: `${prog.percent}%`, height: '100%' }}></div>
+                      </div>
+                      <span style={{ fontSize: '0.85rem', color: prog.percent === 100 ? '#10b981' : 'white' }}>{prog.percent}%</span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px', fontSize: '0.85rem', color: '#94a3b8' }}>{new Date(prog.lastUpdated).toLocaleString()}</td>
+                </tr>
+              ));
+            }) : (
+              <tr><td colSpan="4" style={{ padding: '12px', color: '#64748b', textAlign: 'center' }}>No progress data found.</td></tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Comment Moderation */}
