@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, ShieldCheck, CheckCircle, Clock } from 'lucide-react';
+import quizLogo from '../assets/quix.png';
 
 const QUESTIONS = [
   { id: 1, text: "Which is the largest state in India by area?", options: ["Maharashtra", "Rajasthan", "Madhya Pradesh", "Uttar Pradesh"], answer: "Rajasthan" },
@@ -153,12 +154,15 @@ const PublicQuiz = () => {
   };
 
   const OfficialHeader = () => (
-    <div style={{ background: '#ffffff', width: '100%', borderTop: '6px solid #FF9933', borderBottom: '6px solid #138808', padding: '15px 40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
-      <img src={EMBLEM_URL} alt="Emblem of India" style={{ height: '70px' }} />
-      <div style={{ display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif' }}>
-        <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#000080' }}>भारत सरकार</span>
-        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000080' }}>GOVERNMENT OF INDIA</span>
+    <div style={{ background: '#ffffff', width: '100%', borderTop: '6px solid #FF9933', borderBottom: '6px solid #138808', padding: '15px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <img src={EMBLEM_URL} alt="Emblem of India" style={{ height: '70px' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif' }}>
+          <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#000080' }}>भारत सरकार</span>
+          <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000080' }}>GOVERNMENT OF INDIA</span>
+        </div>
       </div>
+      <img src={quizLogo} alt="Quiz Logo" style={{ height: '70px', objectFit: 'contain' }} />
     </div>
   );
 
