@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebaseConfig';
-import { Camera, Monitor, AlertTriangle, ShieldCheck, CheckCircle } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, CheckCircle, Clock } from 'lucide-react';
 
 const QUESTIONS = [
   { id: 1, text: "Which is the largest state in India by area?", options: ["Maharashtra", "Rajasthan", "Madhya Pradesh", "Uttar Pradesh"], answer: "Rajasthan" },
@@ -20,19 +18,9 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || (window.location.hostname ==
 const EMBLEM_URL = "https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg";
 
 const PublicQuiz = () => {
-  const [stage, setStage] = useState('welcome');
+  const [stage, setStage] = useState('welcome'); // welcome | terms | quiz | submitting | done
   const [participantName, setParticipantName] = useState('');
   
-  const [camStream, setCamStream] = useState(null);
-  const [screenStream, setScreenStream] = useState(null);
-  const [camError, setCamError] = useState('');
-  const [screenError, setScreenError] = useState('');
-
-  const camRecorderRef = useRef(null);
-  const screenRecorderRef = useRef(null);
-  const camChunksRef = useRef([]);
-  const screenChunksRef = useRef([]);
-
   const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(480);
@@ -40,14 +28,8 @@ const PublicQuiz = () => {
   const [graceTimeLeft, setGraceTimeLeft] = useState(60);
   const [isViolation, setIsViolation] = useState(false);
   const graceTimerRef = useRef(null);
-  const videoRef = useRef(null);
 
-  useEffect(() => {
-    if (stage === 'setup' && camStream && videoRef.current) {
-      videoRef.current.srcObject = camStream;
-    }
-  }, [stage, camStream]);
-
+  // Main Quiz Timer
   useEffect(() => {
     let timer;
     if (stage === 'quiz' && timeLeft > 0 && !isViolation) {
@@ -58,6 +40,7 @@ const PublicQuiz = () => {
     return () => clearInterval(timer);
   }, [stage, timeLeft, isViolation]);
 
+  // Anti-Cheat: Visibility API & Fullscreen
   useEffect(() => {
     const handleViolationTrigger = () => {
       if (stage === 'quiz') {
@@ -96,6 +79,7 @@ const PublicQuiz = () => {
     };
   }, [stage]);
 
+  // Grace Timer (if violation active)
   useEffect(() => {
     if (isViolation && stage === 'quiz') {
       graceTimerRef.current = setInterval(() => {
@@ -112,66 +96,25 @@ const PublicQuiz = () => {
     return () => clearInterval(graceTimerRef.current);
   }, [isViolation, stage]);
 
-  const requestPermissions = async () => {
-    setCamError('');
-    setScreenError('');
-    try {
-      const cStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      setCamStream(cStream);
-      
-      const sStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-      setScreenStream(sStream);
-      
-      sStream.getVideoTracks()[0].onended = () => {
-        if(stage === 'quiz') handleFinalSubmit(); 
-      };
-    } catch (err) {
-      console.error(err);
-      if (!camStream) setCamError('Camera/Microphone permission denied.');
-      if (!screenStream) setScreenError('Screen share permission denied.');
-    }
-  };
-
   const startQuiz = async () => {
-    if (!camStream || !screenStream) return;
     try {
       await document.documentElement.requestFullscreen();
     } catch (err) {
       console.warn("Fullscreen request failed", err);
     }
-
-    camRecorderRef.current = new MediaRecorder(camStream, { mimeType: 'video/webm' });
-    screenRecorderRef.current = new MediaRecorder(screenStream, { mimeType: 'video/webm' });
-
-    camRecorderRef.current.ondataavailable = e => { if (e.data.size > 0) camChunksRef.current.push(e.data); };
-    screenRecorderRef.current.ondataavailable = e => { if (e.data.size > 0) screenChunksRef.current.push(e.data); };
-
-    camRecorderRef.current.start();
-    screenRecorderRef.current.start();
-
     setStage('quiz');
   };
 
-  const stopStreamsAndRecordings = async () => {
-    return new Promise((resolve) => {
-      let camDone = false, screenDone = false;
-      const checkDone = () => { if (camDone && screenDone) resolve(); };
+  const handleOptionSelect = (option) => {
+    const qId = QUESTIONS[currentQuestionIndex].id;
+    setAnswers(prev => ({ ...prev, [qId]: option }));
 
-      if (camRecorderRef.current && camRecorderRef.current.state !== 'inactive') {
-        camRecorderRef.current.onstop = () => { camDone = true; checkDone(); };
-        camRecorderRef.current.stop();
-      } else { camDone = true; }
-
-      if (screenRecorderRef.current && screenRecorderRef.current.state !== 'inactive') {
-        screenRecorderRef.current.onstop = () => { screenDone = true; checkDone(); };
-        screenRecorderRef.current.stop();
-      } else { screenDone = true; }
-
-      if (camStream) camStream.getTracks().forEach(t => t.stop());
-      if (screenStream) screenStream.getTracks().forEach(t => t.stop());
-      
-      checkDone();
-    });
+    // Auto advance after short delay
+    setTimeout(() => {
+      if (currentQuestionIndex < QUESTIONS.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+      }
+    }, 600);
   };
 
   const handleFinalSubmit = async () => {
@@ -182,32 +125,12 @@ const PublicQuiz = () => {
       document.exitFullscreen().catch(e => console.warn(e));
     }
 
-    await stopStreamsAndRecordings();
-
-    const timestamp = Date.now();
-    const safeName = participantName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-
-    const camBlob = new Blob(camChunksRef.current, { type: 'video/webm' });
-    const screenBlob = new Blob(screenChunksRef.current, { type: 'video/webm' });
-
-    let camUrl = '';
-    let screenUrl = '';
+    let score = 0;
+    QUESTIONS.forEach(q => {
+      if (answers[q.id] === q.answer) score += 1;
+    });
 
     try {
-      const camStorageRef = storageRef(storage, `quiz_recordings/${safeName}_${timestamp}_camera.webm`);
-      const screenStorageRef = storageRef(storage, `quiz_recordings/${safeName}_${timestamp}_screen.webm`);
-
-      await uploadBytes(camStorageRef, camBlob);
-      camUrl = await getDownloadURL(camStorageRef);
-
-      await uploadBytes(screenStorageRef, screenBlob);
-      screenUrl = await getDownloadURL(screenStorageRef);
-
-      let score = 0;
-      QUESTIONS.forEach(q => {
-        if (answers[q.id] === q.answer) score += 1;
-      });
-
       await fetch(`${API_URL}/quiz-submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -216,8 +139,8 @@ const PublicQuiz = () => {
           score: score,
           total: QUESTIONS.length,
           answers: answers,
-          camVideoUrl: camUrl,
-          screenVideoUrl: screenUrl
+          camVideoUrl: null, // Removed proctoring
+          screenVideoUrl: null // Removed proctoring
         })
       });
 
@@ -283,68 +206,23 @@ const PublicQuiz = () => {
         <OfficialHeader />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={cardStyle}>
-            <h2 style={{ color: '#000080', fontSize: '1.5rem', marginBottom: '20px', borderBottom: '1px solid #ddd', paddingBottom: '10px', fontFamily: 'Georgia, serif' }}>
-              Instructions & Terms of Participation
+            <h2 style={{ color: '#000080', fontSize: '1.5rem', marginBottom: '20px', borderBottom: '1px solid #ddd', paddingBottom: '10px', fontFamily: 'Georgia, serif', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <ShieldCheck size={28} color="#138808" /> Instructions & Terms of Participation
             </h2>
             <div style={{ background: '#fafafa', padding: '20px', border: '1px solid #eee', maxHeight: '400px', overflowY: 'auto', fontSize: '0.95rem', color: '#333', lineHeight: '1.8' }}>
               <p><strong>1. Duration:</strong> Participants are allotted strictly <strong>8 minutes</strong> to complete the examination.</p>
               <p><strong>2. Attempts:</strong> Only a single attempt is authorized per participant. Submissions are final.</p>
               <p><strong>3. Format:</strong> The examination is conducted entirely online via this secure portal.</p>
               <p><strong>4. Schedule:</strong> The portal is open from Sunday, September 6 after 11:00 AM.</p>
-              <p><strong>5. Proctoring:</strong> This is a highly secure examination. <strong>Video and screen recording</strong> permissions must be granted. The session is continuously monitored.</p>
+              <p><strong>5. Proctoring:</strong> This is a secure examination. The session requires you to be in Fullscreen mode at all times.</p>
               <p><strong>6. Violations:</strong> Exiting Fullscreen mode, switching tabs, or minimizing the browser will trigger an immediate warning. Failure to return within 60 seconds will result in forced auto-submission.</p>
               <p><strong>7. Certification:</strong> E-Certificates will be issued to authorized participants post-verification.</p>
             </div>
             <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setStage('setup')} style={{ padding: '12px 30px', background: '#000080', color: 'white', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer', textTransform: 'uppercase', fontWeight: 'bold' }}>
-                Accept & Continue
+              <button onClick={startQuiz} style={{ padding: '12px 30px', background: '#000080', color: 'white', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                Accept & Start Exam in Fullscreen
               </button>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (stage === 'setup') {
-    return (
-      <div style={containerStyle}>
-        <OfficialHeader />
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ ...cardStyle, textAlign: 'center', maxWidth: '600px' }}>
-            <h2 style={{ color: '#000080', fontSize: '1.5rem', marginBottom: '10px', fontFamily: 'Georgia, serif' }}>Proctoring Environment Setup</h2>
-            <p style={{ color: '#555', marginBottom: '30px' }}>To maintain examination integrity, secure access to your camera and screen is required.</p>
-
-            {(camError || screenError) && (
-              <div style={{ background: '#fff3f3', borderLeft: '4px solid #cc0000', color: '#cc0000', padding: '15px', marginBottom: '20px', textAlign: 'left', fontSize: '0.9rem' }}>
-                <strong>Access Denied:</strong> You must allow both Camera and Screen sharing to proceed. Please check your browser permissions.
-              </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
-              <div style={{ flex: 1, background: camStream ? '#f0f9f0' : '#f9f9f9', padding: '20px', border: `1px solid ${camStream ? '#138808' : '#ddd'}` }}>
-                <Camera size={32} color={camStream ? "#138808" : "#888"} style={{ marginBottom: '10px' }} />
-                <div style={{ fontWeight: 'bold', color: camStream ? '#138808' : '#555' }}>{camStream ? 'Camera Authorized' : 'Camera Pending'}</div>
-              </div>
-              <div style={{ flex: 1, background: screenStream ? '#f0f9f0' : '#f9f9f9', padding: '20px', border: `1px solid ${screenStream ? '#138808' : '#ddd'}` }}>
-                <Monitor size={32} color={screenStream ? "#138808" : "#888"} style={{ marginBottom: '10px' }} />
-                <div style={{ fontWeight: 'bold', color: screenStream ? '#138808' : '#555' }}>{screenStream ? 'Screen Authorized' : 'Screen Pending'}</div>
-              </div>
-            </div>
-
-            {camStream && (
-              <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', border: '1px solid #ccc', marginBottom: '20px', background: '#000' }} />
-            )}
-
-            {(!camStream || !screenStream) ? (
-              <button onClick={requestPermissions} style={{ width: '100%', padding: '15px', background: '#000080', color: 'white', border: 'none', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase' }}>
-                Grant Authorizations
-              </button>
-            ) : (
-              <button onClick={startQuiz} style={{ width: '100%', padding: '15px', background: '#138808', color: 'white', border: 'none', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase' }}>
-                Enter Secure Fullscreen & Start
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -362,7 +240,7 @@ const PublicQuiz = () => {
       return (
         <div style={{ minHeight: '100vh', background: '#cc0000', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
           <div style={{ background: 'white', padding: '40px', textAlign: 'center', maxWidth: '500px', borderTop: '5px solid #000080' }}>
-            <AlertTriangle size={60} color="#cc0000" style={{ marginBottom: '20px' }} />
+            <AlertTriangle size={60} color="#cc0000" style={{ margin: '0 auto 20px auto' }} />
             <h2 style={{ fontSize: '1.8rem', color: '#cc0000', marginBottom: '10px', fontFamily: 'Georgia, serif' }}>SECURITY VIOLATION</h2>
             <p style={{ fontSize: '1rem', color: '#333', marginBottom: '20px' }}>You have exited the secure fullscreen environment or changed tabs. This is a strict violation of examination protocols.</p>
             <div style={{ background: '#fff0f0', padding: '15px', border: '1px solid #ffcccc', color: '#cc0000', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '20px' }}>
@@ -406,7 +284,7 @@ const PublicQuiz = () => {
                     name={`question-${currentQuestion.id}`} 
                     value={opt} 
                     checked={answers[currentQuestion.id] === opt} 
-                    onChange={() => setAnswers({...answers, [currentQuestion.id]: opt})}
+                    onChange={() => handleOptionSelect(opt)}
                     style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                   />
                   <span style={{ fontSize: '1rem', color: '#333', fontWeight: answers[currentQuestion.id] === opt ? 'bold' : 'normal' }}>
@@ -422,8 +300,11 @@ const PublicQuiz = () => {
                   Final Submit
                 </button>
               ) : (
-                <button onClick={() => setCurrentQuestionIndex(i => i + 1)} style={{ padding: '12px 30px', background: '#000080', color: 'white', border: 'none', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase' }}>
-                  Save & Next Question
+                <button 
+                  onClick={() => setCurrentQuestionIndex(i => i + 1)} 
+                  disabled={!answers[currentQuestion.id]}
+                  style={{ padding: '12px 30px', background: answers[currentQuestion.id] ? '#000080' : '#ccc', color: 'white', border: 'none', fontSize: '1rem', fontWeight: 'bold', cursor: answers[currentQuestion.id] ? 'pointer' : 'not-allowed', textTransform: 'uppercase' }}>
+                  Skip to Next Question
                 </button>
               )}
             </div>
@@ -441,7 +322,7 @@ const PublicQuiz = () => {
           <div style={{ ...cardStyle, textAlign: 'center', maxWidth: '500px' }}>
             <div style={{ width: '50px', height: '50px', border: '4px solid #eee', borderTopColor: '#000080', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px auto' }}></div>
             <h2 style={{ color: '#000080', marginBottom: '10px', fontFamily: 'Georgia, serif' }}>Processing Submission</h2>
-            <p style={{ color: '#555', fontSize: '0.9rem' }}>Securely transmitting encrypted data and video logs to the server. Do not close this window.</p>
+            <p style={{ color: '#555', fontSize: '0.9rem' }}>Securely transmitting encrypted data to the server. Do not close this window.</p>
             <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
           </div>
         </div>
@@ -458,7 +339,7 @@ const PublicQuiz = () => {
             <CheckCircle size={60} color="#138808" style={{ margin: '0 auto 20px auto' }} />
             <h2 style={{ color: '#000080', fontSize: '1.6rem', marginBottom: '15px', fontFamily: 'Georgia, serif' }}>Submission Successful</h2>
             <div style={{ width: '60px', height: '3px', background: '#138808', margin: '0 auto 20px auto' }}></div>
-            <p style={{ color: '#333', fontSize: '1rem', lineHeight: '1.6' }}>Your examination data and proctoring logs have been securely submitted to the authorities.</p>
+            <p style={{ color: '#333', fontSize: '1rem', lineHeight: '1.6' }}>Your examination data has been securely submitted to the authorities.</p>
             <p style={{ color: '#777', fontSize: '0.9rem', marginTop: '20px' }}>You may now safely close this browser window.</p>
           </div>
         </div>
