@@ -31,6 +31,18 @@ conn.once('open', () => {
   console.log('MongoDB Connected & GridFS initialized');
 });
 
+// Quiz Submission Schema & Model
+const quizSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  score: { type: Number, required: true },
+  total: { type: Number, required: true },
+  answers: { type: Object, required: true },
+  camVideoUrl: { type: String },
+  screenVideoUrl: { type: String },
+  timestamp: { type: Date, default: Date.now }
+});
+const QuizSubmission = conn.model('QuizSubmission', quizSchema);
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -202,6 +214,39 @@ app.post('/api/ai/grade', async (req, res) => {
   } catch (err) {
     console.error("Grader Error:", err);
     res.status(500).json({ error: "Failed to grade answer" });
+  }
+});
+
+// --- Quiz Competition Endpoints ---
+
+app.post('/api/quiz-submit', async (req, res) => {
+  try {
+    const newSubmission = new QuizSubmission(req.body);
+    await newSubmission.save();
+    res.status(201).json(newSubmission);
+  } catch (err) {
+    console.error("Error saving quiz submission:", err);
+    res.status(500).json({ error: "Failed to save submission" });
+  }
+});
+
+app.get('/api/quiz-submissions', async (req, res) => {
+  try {
+    const submissions = await QuizSubmission.find().sort({ timestamp: -1 });
+    res.json(submissions);
+  } catch (err) {
+    console.error("Error fetching quiz submissions:", err);
+    res.status(500).json({ error: "Failed to fetch submissions" });
+  }
+});
+
+app.delete('/api/quiz-delete/:id', async (req, res) => {
+  try {
+    await QuizSubmission.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting submission:", err);
+    res.status(500).json({ error: "Failed to delete submission" });
   }
 });
 

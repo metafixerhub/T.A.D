@@ -61,7 +61,7 @@ function AppContent() {
       )}
       
       {/* Global AI Chatbot */}
-      <HalloG />
+      {!location.pathname.startsWith('/national/participation/know-our-india') && <HalloG />}
     </>
   );
 }

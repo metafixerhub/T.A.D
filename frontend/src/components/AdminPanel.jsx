@@ -155,16 +155,18 @@ const AdminPanel = () => {
       }
     });
 
-    const quizRef = ref(database, 'quiz_submissions');
-    const unsubQuiz = onValue(quizRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const list = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-        setQuizSubmissions(list.sort((a, b) => b.timestamp - a.timestamp));
-      } else {
-        setQuizSubmissions([]);
+    const fetchQuizSubmissions = async () => {
+      try {
+        const response = await fetch(`${API_URL}/quiz-submissions`);
+        if(response.ok) {
+          const data = await response.json();
+          setQuizSubmissions(data);
+        }
+      } catch(err) {
+        console.error("Failed to fetch quiz submissions from backend:", err);
       }
-    });
+    };
+    fetchQuizSubmissions();
 
     const progRef = ref(database, 'video_progress');
     const unsubProg = onValue(progRef, (snapshot) => {
@@ -183,7 +185,7 @@ const AdminPanel = () => {
     };
     fetchUsers();
 
-    return () => { unsub(); unsubSub(); unsubLive(); unsubNotif(); unsubRec(); unsubStory(); unsubAfp(); unsubProg(); unsubQuiz(); };
+    return () => { unsub(); unsubSub(); unsubLive(); unsubNotif(); unsubRec(); unsubStory(); unsubAfp(); unsubProg(); };
   }, [unlocked]);
 
   const publishNotification = async (e) => {
@@ -436,6 +438,22 @@ const AdminPanel = () => {
     }
   };
 
+  const deleteQuizSubmission = async (id) => {
+    if (window.confirm("Permanently delete this quiz submission?")) {
+      try {
+        const res = await fetch(`${API_URL}/quiz-delete/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          setQuizSubmissions(prev => prev.filter(sub => sub._id !== id));
+          alert("Submission deleted.");
+        } else {
+          alert("Failed to delete.");
+        }
+      } catch (err) {
+        alert("Error deleting: " + err.message);
+      }
+    }
+  };
+
   if (!unlocked) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '20px' }}>
@@ -597,10 +615,15 @@ const AdminPanel = () => {
           <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Proctoring recordings and scores for Know Our India.</p>
           <div style={{ display: 'grid', gap: '10px', maxHeight: '450px', overflowY: 'auto' }}>
             {quizSubmissions.map(sub => (
-              <div key={sub.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div key={sub._id} style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                   <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '1rem' }}>{sub.name}</span>
-                  <span style={{ color: '#10b981', fontWeight: 700 }}>Score: {sub.score} / {sub.total}</span>
+                  <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    <span style={{ color: '#10b981', fontWeight: 700 }}>Score: {sub.score} / {sub.total}</span>
+                    <button onClick={() => deleteQuizSubmission(sub._id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }} title="Delete Participant">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
                 <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '15px' }}>{new Date(sub.timestamp).toLocaleString()}</div>
                 
