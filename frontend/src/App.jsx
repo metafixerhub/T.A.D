@@ -14,8 +14,8 @@ import AdminPanel from './components/AdminPanel';
 import StoryCorner from './components/StoryCorner';
 import HalloG from './components/HalloG';
 import Recordings from './components/Recordings';
-
 import DashboardHome from './components/DashboardHome';
+import PublicQuiz from './components/PublicQuiz';
 
 function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -43,6 +43,10 @@ function AppContent() {
           </Routes>
           <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
         </>
+      ) : location.pathname.startsWith('/national/participation/know-our-india') ? (
+        <Routes>
+          <Route path="/national/participation/know-our-india/quiz/online" element={<PublicQuiz />} />
+        </Routes>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
           <Navbar onLoginClick={() => setIsLoginOpen(true)} />

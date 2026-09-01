@@ -61,6 +61,9 @@ const AdminPanel = () => {
   const [recordingThumb, setRecordingThumb] = useState(null);
   const [recordings, setRecordings] = useState([]);
 
+  // Quiz Competition States
+  const [quizSubmissions, setQuizSubmissions] = useState([]);
+
   // Calendar States
   const [calTitle, setCalTitle] = useState('');
   const [calDate, setCalDate] = useState('');
@@ -152,6 +155,17 @@ const AdminPanel = () => {
       }
     });
 
+    const quizRef = ref(database, 'quiz_submissions');
+    const unsubQuiz = onValue(quizRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const list = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        setQuizSubmissions(list.sort((a, b) => b.timestamp - a.timestamp));
+      } else {
+        setQuizSubmissions([]);
+      }
+    });
+
     const progRef = ref(database, 'video_progress');
     const unsubProg = onValue(progRef, (snapshot) => {
       setStudentProgress(snapshot.val() || {});
@@ -169,7 +183,7 @@ const AdminPanel = () => {
     };
     fetchUsers();
 
-    return () => { unsub(); unsubSub(); unsubLive(); unsubNotif(); unsubRec(); unsubStory(); unsubAfp(); unsubProg(); };
+    return () => { unsub(); unsubSub(); unsubLive(); unsubNotif(); unsubRec(); unsubStory(); unsubAfp(); unsubProg(); unsubQuiz(); };
   }, [unlocked]);
 
   const publishNotification = async (e) => {
@@ -574,6 +588,33 @@ const AdminPanel = () => {
               <AfpSubmissionItem key={sub.id} sub={sub} approveAfp={approveAfp} declineAfp={declineAfp} />
             ))}
             {dnaSubmissions.length === 0 && <div style={{ color: '#64748b' }}>No pending submissions.</div>}
+          </div>
+        </div>
+
+        {/* Quiz Competition Review */}
+        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#f59e0b' }}><ShieldAlert size={20} /> Quiz Submissions</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Proctoring recordings and scores for Know Our India.</p>
+          <div style={{ display: 'grid', gap: '10px', maxHeight: '450px', overflowY: 'auto' }}>
+            {quizSubmissions.map(sub => (
+              <div key={sub.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '1rem' }}>{sub.name}</span>
+                  <span style={{ color: '#10b981', fontWeight: 700 }}>Score: {sub.score} / {sub.total}</span>
+                </div>
+                <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '15px' }}>{new Date(sub.timestamp).toLocaleString()}</div>
+                
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <a href={sub.camVideoUrl} target="_blank" rel="noreferrer" style={{ flex: 1, padding: '8px', background: '#3b82f6', color: 'white', textDecoration: 'none', borderRadius: '8px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600 }}>
+                    Watch Camera
+                  </a>
+                  <a href={sub.screenVideoUrl} target="_blank" rel="noreferrer" style={{ flex: 1, padding: '8px', background: '#10b981', color: 'white', textDecoration: 'none', borderRadius: '8px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600 }}>
+                    Watch Screen
+                  </a>
+                </div>
+              </div>
+            ))}
+            {quizSubmissions.length === 0 && <div style={{ color: '#64748b' }}>No quiz submissions yet.</div>}
           </div>
         </div>
 
