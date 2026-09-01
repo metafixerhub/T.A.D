@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebaseConfig';
-import { Camera, Monitor, AlertTriangle, ShieldCheck, CheckCircle, Clock, Landmark, ChevronRight } from 'lucide-react';
-import quizLogo from '../assets/quix.png';
+import { Camera, Monitor, AlertTriangle, ShieldCheck, CheckCircle } from 'lucide-react';
 
 const QUESTIONS = [
   { id: 1, text: "Which is the largest state in India by area?", options: ["Maharashtra", "Rajasthan", "Madhya Pradesh", "Uttar Pradesh"], answer: "Rajasthan" },
@@ -18,27 +17,25 @@ const QUESTIONS = [
 ];
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://t-a-d.onrender.com/api');
+const EMBLEM_URL = "https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg";
 
 const PublicQuiz = () => {
-  const [stage, setStage] = useState('welcome'); // welcome | terms | setup | quiz | submitting | done
+  const [stage, setStage] = useState('welcome');
   const [participantName, setParticipantName] = useState('');
   
-  // Permissions & Streams
   const [camStream, setCamStream] = useState(null);
   const [screenStream, setScreenStream] = useState(null);
   const [camError, setCamError] = useState('');
   const [screenError, setScreenError] = useState('');
 
-  // Recording
   const camRecorderRef = useRef(null);
   const screenRecorderRef = useRef(null);
   const camChunksRef = useRef([]);
   const screenChunksRef = useRef([]);
 
-  // Quiz State
   const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(480); // 8 minutes = 480 seconds
+  const [timeLeft, setTimeLeft] = useState(480);
   
   const [graceTimeLeft, setGraceTimeLeft] = useState(60);
   const [isViolation, setIsViolation] = useState(false);
@@ -51,7 +48,6 @@ const PublicQuiz = () => {
     }
   }, [stage, camStream]);
 
-  // Main Quiz Timer
   useEffect(() => {
     let timer;
     if (stage === 'quiz' && timeLeft > 0 && !isViolation) {
@@ -62,7 +58,6 @@ const PublicQuiz = () => {
     return () => clearInterval(timer);
   }, [stage, timeLeft, isViolation]);
 
-  // Anti-Cheat: Visibility API & Fullscreen
   useEffect(() => {
     const handleViolationTrigger = () => {
       if (stage === 'quiz') {
@@ -101,7 +96,6 @@ const PublicQuiz = () => {
     };
   }, [stage]);
 
-  // Grace Timer (if violation active)
   useEffect(() => {
     if (isViolation && stage === 'quiz') {
       graceTimerRef.current = setInterval(() => {
@@ -140,7 +134,6 @@ const PublicQuiz = () => {
 
   const startQuiz = async () => {
     if (!camStream || !screenStream) return;
-    
     try {
       await document.documentElement.requestFullscreen();
     } catch (err) {
@@ -215,7 +208,6 @@ const PublicQuiz = () => {
         if (answers[q.id] === q.answer) score += 1;
       });
 
-      // Save to MongoDB
       await fetch(`${API_URL}/quiz-submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -237,40 +229,47 @@ const PublicQuiz = () => {
     }
   };
 
-  const TopHeader = () => (
-    <div style={{ background: '#1e293b', color: 'white', padding: '15px 30px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', borderBottom: '4px solid #f59e0b' }}>
-      <Landmark size={28} color="#f59e0b" />
-      <div style={{ textAlign: 'center' }}>
-        <h2 style={{ margin: 0, fontSize: '1.2rem', letterSpacing: '1px', textTransform: 'uppercase' }}>Government of India</h2>
-        <span style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Satyameva Jayate</span>
+  const OfficialHeader = () => (
+    <div style={{ background: '#ffffff', width: '100%', borderTop: '6px solid #FF9933', borderBottom: '6px solid #138808', padding: '15px 40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+      <img src={EMBLEM_URL} alt="Emblem of India" style={{ height: '70px' }} />
+      <div style={{ display: 'flex', flexDirection: 'column', fontFamily: 'Georgia, serif' }}>
+        <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#000080' }}>भारत सरकार</span>
+        <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000080' }}>GOVERNMENT OF INDIA</span>
       </div>
     </div>
   );
 
-  // UI Renderers
+  const containerStyle = { minHeight: '100vh', background: '#f4f5f7', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' };
+  const cardStyle = { background: 'white', padding: '40px', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxWidth: '800px', width: '100%', borderTop: '4px solid #000080' };
+
   if (stage === 'welcome') {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
-        <TopHeader />
+      <div style={containerStyle}>
+        <OfficialHeader />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: 'white', padding: '40px', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.08)', maxWidth: '500px', width: '100%', textAlign: 'center' }}>
-            <img src={quizLogo} alt="Know Our India" style={{ width: '100%', borderRadius: '12px', marginBottom: '20px' }} />
-            <h1 style={{ color: '#1e293b', fontSize: '1.8rem', marginBottom: '10px' }}>KNOW OUR INDIA</h1>
-            <p style={{ color: '#64748b', marginBottom: '30px' }}>National Quiz Competition</p>
+          <div style={{ ...cardStyle, textAlign: 'center' }}>
+            <h1 style={{ color: '#000080', fontSize: '1.8rem', marginBottom: '5px', fontFamily: 'Georgia, serif' }}>National Know Our India Quiz Competition</h1>
+            <div style={{ width: '60px', height: '3px', background: '#FF9933', margin: '15px auto 30px auto' }}></div>
+            <p style={{ color: '#333', marginBottom: '30px', fontSize: '1.1rem', lineHeight: '1.6' }}>
+              Welcome to the official portal for the National Know Our India Quiz Competition. Please enter your full legal name below to register your participation.
+            </p>
             
-            <input 
-              type="text" 
-              placeholder="Please enter your full name" 
-              value={participantName} 
-              onChange={e => setParticipantName(e.target.value)}
-              style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '2px solid #e2e8f0', fontSize: '1.1rem', marginBottom: '20px', outline: 'none' }}
-            />
+            <div style={{ textAlign: 'left', marginBottom: '20px', maxWidth: '400px', margin: '0 auto 30px auto' }}>
+              <label style={{ display: 'block', fontWeight: 'bold', color: '#555', marginBottom: '8px' }}>Participant Name *</label>
+              <input 
+                type="text" 
+                placeholder="Enter Full Name" 
+                value={participantName} 
+                onChange={e => setParticipantName(e.target.value)}
+                style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', outline: 'none' }}
+              />
+            </div>
             <button 
               onClick={() => setStage('terms')} 
               disabled={!participantName.trim()}
-              style={{ width: '100%', padding: '15px', background: participantName.trim() ? '#3b82f6' : '#cbd5e1', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: participantName.trim() ? 'pointer' : 'not-allowed' }}
+              style={{ padding: '12px 40px', background: participantName.trim() ? '#000080' : '#ccc', color: 'white', border: 'none', borderRadius: '4px', fontSize: '1.1rem', cursor: participantName.trim() ? 'pointer' : 'not-allowed', textTransform: 'uppercase', fontWeight: 'bold' }}
             >
-              Continue to Terms
+              Proceed to Instructions
             </button>
           </div>
         </div>
@@ -280,28 +279,27 @@ const PublicQuiz = () => {
 
   if (stage === 'terms') {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
-        <TopHeader />
+      <div style={containerStyle}>
+        <OfficialHeader />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: 'white', padding: '40px', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.08)', maxWidth: '700px', width: '100%' }}>
-            <h2 style={{ color: '#1e293b', fontSize: '1.8rem', marginBottom: '20px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-              <ShieldCheck size={28} color="#10b981" /> Terms & Conditions
+          <div style={cardStyle}>
+            <h2 style={{ color: '#000080', fontSize: '1.5rem', marginBottom: '20px', borderBottom: '1px solid #ddd', paddingBottom: '10px', fontFamily: 'Georgia, serif' }}>
+              Instructions & Terms of Participation
             </h2>
-            <div style={{ background: '#f1f5f9', padding: '20px', borderRadius: '12px', maxHeight: '400px', overflowY: 'auto', fontSize: '0.95rem', color: '#475569', lineHeight: '1.6' }}>
-              <p><strong>1. Quiz Duration:</strong> Each participant will get only 8 minutes to complete the quiz.</p>
-              <p><strong>2. One Attempt Only:</strong> Each participant is allowed one attempt only. Once submitted, the answers cannot be changed.</p>
-              <p><strong>3. Online Participation:</strong> The quiz will be conducted completely online.</p>
-              <p><strong>4. Start Time:</strong> The quiz will begin at the announced time. Sunday, September 6 after 11:00 AM.</p>
-              <p><strong>5. Time Limit:</strong> The quiz will automatically end when the 8-minute limit is reached.</p>
-              <p><strong>6. Fair Play:</strong> Participants must answer independently. Any form of cheating, impersonation, or unfair assistance may result in disqualification. <strong>Camera and screen recording will be strictly monitored.</strong></p>
-              <p><strong>7. Results:</strong> Winners will be selected according to the score and applicable tie-breaking rules.</p>
-              <p><strong>8. Certificates:</strong> Eligible participants will receive a participation certificate.</p>
-              <p><strong>9. Technical Issues:</strong> Organizers are not responsible for problems caused by the participant’s device, internet connection, or power failure.</p>
-              <p><strong>10. Safety & Proctoring:</strong> By proceeding, you agree to grant Camera and Screen Recording permissions. Leaving the tab or exiting fullscreen during the exam will result in auto-submission.</p>
+            <div style={{ background: '#fafafa', padding: '20px', border: '1px solid #eee', maxHeight: '400px', overflowY: 'auto', fontSize: '0.95rem', color: '#333', lineHeight: '1.8' }}>
+              <p><strong>1. Duration:</strong> Participants are allotted strictly <strong>8 minutes</strong> to complete the examination.</p>
+              <p><strong>2. Attempts:</strong> Only a single attempt is authorized per participant. Submissions are final.</p>
+              <p><strong>3. Format:</strong> The examination is conducted entirely online via this secure portal.</p>
+              <p><strong>4. Schedule:</strong> The portal is open from Sunday, September 6 after 11:00 AM.</p>
+              <p><strong>5. Proctoring:</strong> This is a highly secure examination. <strong>Video and screen recording</strong> permissions must be granted. The session is continuously monitored.</p>
+              <p><strong>6. Violations:</strong> Exiting Fullscreen mode, switching tabs, or minimizing the browser will trigger an immediate warning. Failure to return within 60 seconds will result in forced auto-submission.</p>
+              <p><strong>7. Certification:</strong> E-Certificates will be issued to authorized participants post-verification.</p>
             </div>
-            <button onClick={() => setStage('setup')} style={{ width: '100%', padding: '15px', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '20px' }}>
-              I Agree, Proceed to Setup
-            </button>
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setStage('setup')} style={{ padding: '12px 30px', background: '#000080', color: 'white', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                Accept & Continue
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -310,45 +308,41 @@ const PublicQuiz = () => {
 
   if (stage === 'setup') {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
-        <TopHeader />
+      <div style={containerStyle}>
+        <OfficialHeader />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: 'white', padding: '40px', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.08)', maxWidth: '600px', width: '100%', textAlign: 'center' }}>
-            <h2 style={{ color: '#1e293b', fontSize: '1.8rem', marginBottom: '10px' }}>Safety & Proctoring Setup</h2>
-            <p style={{ color: '#64748b', marginBottom: '30px' }}>We require camera and screen permissions to ensure a fair competition.</p>
+          <div style={{ ...cardStyle, textAlign: 'center', maxWidth: '600px' }}>
+            <h2 style={{ color: '#000080', fontSize: '1.5rem', marginBottom: '10px', fontFamily: 'Georgia, serif' }}>Proctoring Environment Setup</h2>
+            <p style={{ color: '#555', marginBottom: '30px' }}>To maintain examination integrity, secure access to your camera and screen is required.</p>
 
             {(camError || screenError) && (
-              <div style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#b91c1c', padding: '15px', borderRadius: '12px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
-                <AlertTriangle size={24} />
-                <div>
-                  <strong>Warning:</strong> Please allow your camera and screen sharing to safety. <br/>
-                  {camError} {screenError}
-                </div>
+              <div style={{ background: '#fff3f3', borderLeft: '4px solid #cc0000', color: '#cc0000', padding: '15px', marginBottom: '20px', textAlign: 'left', fontSize: '0.9rem' }}>
+                <strong>Access Denied:</strong> You must allow both Camera and Screen sharing to proceed. Please check your browser permissions.
               </div>
             )}
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
-              <div style={{ flex: 1, background: camStream ? '#ecfdf5' : '#f1f5f9', padding: '20px', borderRadius: '16px', border: `2px solid ${camStream ? '#10b981' : '#e2e8f0'}` }}>
-                <Camera size={32} color={camStream ? "#10b981" : "#64748b"} style={{ marginBottom: '10px' }} />
-                <div style={{ fontWeight: 'bold', color: camStream ? '#065f46' : '#475569' }}>{camStream ? 'Camera Active' : 'Camera Required'}</div>
+              <div style={{ flex: 1, background: camStream ? '#f0f9f0' : '#f9f9f9', padding: '20px', border: `1px solid ${camStream ? '#138808' : '#ddd'}` }}>
+                <Camera size={32} color={camStream ? "#138808" : "#888"} style={{ marginBottom: '10px' }} />
+                <div style={{ fontWeight: 'bold', color: camStream ? '#138808' : '#555' }}>{camStream ? 'Camera Authorized' : 'Camera Pending'}</div>
               </div>
-              <div style={{ flex: 1, background: screenStream ? '#ecfdf5' : '#f1f5f9', padding: '20px', borderRadius: '16px', border: `2px solid ${screenStream ? '#10b981' : '#e2e8f0'}` }}>
-                <Monitor size={32} color={screenStream ? "#10b981" : "#64748b"} style={{ marginBottom: '10px' }} />
-                <div style={{ fontWeight: 'bold', color: screenStream ? '#065f46' : '#475569' }}>{screenStream ? 'Screen Active' : 'Screen Required'}</div>
+              <div style={{ flex: 1, background: screenStream ? '#f0f9f0' : '#f9f9f9', padding: '20px', border: `1px solid ${screenStream ? '#138808' : '#ddd'}` }}>
+                <Monitor size={32} color={screenStream ? "#138808" : "#888"} style={{ marginBottom: '10px' }} />
+                <div style={{ fontWeight: 'bold', color: screenStream ? '#138808' : '#555' }}>{screenStream ? 'Screen Authorized' : 'Screen Pending'}</div>
               </div>
             </div>
 
             {camStream && (
-              <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '12px', marginBottom: '20px', background: '#000' }} />
+              <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', border: '1px solid #ccc', marginBottom: '20px', background: '#000' }} />
             )}
 
             {(!camStream || !screenStream) ? (
-              <button onClick={requestPermissions} style={{ width: '100%', padding: '15px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
-                Grant Permissions
+              <button onClick={requestPermissions} style={{ width: '100%', padding: '15px', background: '#000080', color: 'white', border: 'none', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase' }}>
+                Grant Authorizations
               </button>
             ) : (
-              <button onClick={startQuiz} style={{ width: '100%', padding: '15px', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer' }}>
-                Start Quiz Now
+              <button onClick={startQuiz} style={{ width: '100%', padding: '15px', background: '#138808', color: 'white', border: 'none', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase' }}>
+                Enter Secure Fullscreen & Start
               </button>
             )}
           </div>
@@ -366,14 +360,16 @@ const PublicQuiz = () => {
 
     if (isViolation) {
       return (
-        <div style={{ minHeight: '100vh', background: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
-          <div style={{ background: 'white', padding: '40px', borderRadius: '24px', textAlign: 'center', maxWidth: '500px' }}>
-            <AlertTriangle size={60} color="#ef4444" style={{ marginBottom: '20px' }} />
-            <h2 style={{ fontSize: '2rem', color: '#b91c1c', marginBottom: '10px' }}>WARNING!</h2>
-            <p style={{ fontSize: '1.1rem', color: '#475569', marginBottom: '20px' }}>You have exited fullscreen or left the quiz tab. This violates the safety rules.</p>
-            <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#1e293b' }}>Auto-submitting in: <span style={{ color: '#ef4444' }}>{graceTimeLeft} seconds</span></p>
-            <button onClick={startQuiz} style={{ marginTop: '20px', padding: '12px 24px', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer' }}>
-              Return to Fullscreen Now
+        <div style={{ minHeight: '100vh', background: '#cc0000', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
+          <div style={{ background: 'white', padding: '40px', textAlign: 'center', maxWidth: '500px', borderTop: '5px solid #000080' }}>
+            <AlertTriangle size={60} color="#cc0000" style={{ marginBottom: '20px' }} />
+            <h2 style={{ fontSize: '1.8rem', color: '#cc0000', marginBottom: '10px', fontFamily: 'Georgia, serif' }}>SECURITY VIOLATION</h2>
+            <p style={{ fontSize: '1rem', color: '#333', marginBottom: '20px' }}>You have exited the secure fullscreen environment or changed tabs. This is a strict violation of examination protocols.</p>
+            <div style={{ background: '#fff0f0', padding: '15px', border: '1px solid #ffcccc', color: '#cc0000', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '20px' }}>
+              Auto-submission in: {graceTimeLeft} seconds
+            </div>
+            <button onClick={startQuiz} style={{ padding: '12px 24px', background: '#000080', color: 'white', border: 'none', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase' }}>
+              Return to Examination Immediately
             </button>
           </div>
         </div>
@@ -384,48 +380,50 @@ const PublicQuiz = () => {
     const isLastQuestion = currentQuestionIndex === QUESTIONS.length - 1;
 
     return (
-      <div style={{ minHeight: '100vh', background: '#f4f7fe', display: 'flex', flexDirection: 'column' }}>
-        <TopHeader />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '800px', width: '100%', margin: '0 auto', padding: '30px 20px' }}>
+      <div style={containerStyle}>
+        <OfficialHeader />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '900px', width: '100%', margin: '0 auto', padding: '30px 20px' }}>
           
-          <div style={{ background: 'white', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-            <div style={{ fontWeight: 'bold', color: '#64748b', fontSize: '1rem' }}>
+          <div style={{ background: 'white', padding: '15px 20px', border: '1px solid #ddd', borderLeft: '4px solid #FF9933', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div style={{ fontWeight: 'bold', color: '#333', fontSize: '0.9rem', textTransform: 'uppercase' }}>
               Question {currentQuestionIndex + 1} of {QUESTIONS.length}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: timeLeft < 60 ? '#fef2f2' : '#f1f5f9', color: timeLeft < 60 ? '#ef4444' : '#3b82f6', padding: '10px 20px', borderRadius: '30px', fontWeight: 'bold', fontSize: '1.1rem' }}>
-              <Clock size={20} /> {formatTime(timeLeft)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: timeLeft < 60 ? '#cc0000' : '#000080', fontWeight: 'bold', fontSize: '1rem' }}>
+              <Clock size={18} /> Time Remaining: {formatTime(timeLeft)}
             </div>
           </div>
 
-          <div style={{ background: 'white', padding: '40px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ margin: '0 0 30px 0', fontSize: '1.4rem', color: '#1e293b', lineHeight: '1.5' }}>
+          <div style={{ background: 'white', padding: '40px', border: '1px solid #ddd', borderTop: '4px solid #000080', flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <h3 style={{ margin: '0 0 30px 0', fontSize: '1.3rem', color: '#111', lineHeight: '1.6', fontFamily: 'Georgia, serif' }}>
               {currentQuestion.text}
             </h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', flex: 1 }}>
-              {currentQuestion.options.map(opt => (
-                <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '20px', borderRadius: '16px', border: answers[currentQuestion.id] === opt ? '2px solid #3b82f6' : '2px solid #e2e8f0', background: answers[currentQuestion.id] === opt ? '#eff6ff' : 'white', cursor: 'pointer', transition: 'all 0.2s' }}>
+              {currentQuestion.options.map((opt, i) => (
+                <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 20px', border: answers[currentQuestion.id] === opt ? '2px solid #000080' : '1px solid #ddd', background: answers[currentQuestion.id] === opt ? '#f4f6fc' : 'white', cursor: 'pointer' }}>
                   <input 
                     type="radio" 
                     name={`question-${currentQuestion.id}`} 
                     value={opt} 
                     checked={answers[currentQuestion.id] === opt} 
                     onChange={() => setAnswers({...answers, [currentQuestion.id]: opt})}
-                    style={{ width: '22px', height: '22px', cursor: 'pointer' }}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                   />
-                  <span style={{ fontSize: '1.1rem', color: '#334155', fontWeight: answers[currentQuestion.id] === opt ? 'bold' : 'normal' }}>{opt}</span>
+                  <span style={{ fontSize: '1rem', color: '#333', fontWeight: answers[currentQuestion.id] === opt ? 'bold' : 'normal' }}>
+                    <span style={{ fontWeight: 'bold', marginRight: '10px' }}>{String.fromCharCode(65 + i)}.</span> {opt}
+                  </span>
                 </label>
               ))}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '30px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '40px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
               {isLastQuestion ? (
-                <button onClick={handleFinalSubmit} style={{ padding: '15px 40px', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  Submit Competition <CheckCircle size={20} />
+                <button onClick={handleFinalSubmit} style={{ padding: '12px 30px', background: '#138808', color: 'white', border: 'none', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase' }}>
+                  Final Submit
                 </button>
               ) : (
-                <button onClick={() => setCurrentQuestionIndex(i => i + 1)} style={{ padding: '15px 40px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  Next Question <ChevronRight size={20} />
+                <button onClick={() => setCurrentQuestionIndex(i => i + 1)} style={{ padding: '12px 30px', background: '#000080', color: 'white', border: 'none', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', textTransform: 'uppercase' }}>
+                  Save & Next Question
                 </button>
               )}
             </div>
@@ -437,12 +435,15 @@ const PublicQuiz = () => {
 
   if (stage === 'submitting') {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-        <div style={{ background: 'white', padding: '50px', borderRadius: '24px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}>
-          <div style={{ width: '60px', height: '60px', border: '5px solid #e2e8f0', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px auto' }}></div>
-          <h2 style={{ color: '#1e293b', marginBottom: '10px' }}>Submitting Quiz & Secure Data...</h2>
-          <p style={{ color: '#64748b' }}>Please do not close or refresh this page. This may take a few moments depending on your connection.</p>
-          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      <div style={containerStyle}>
+        <OfficialHeader />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ ...cardStyle, textAlign: 'center', maxWidth: '500px' }}>
+            <div style={{ width: '50px', height: '50px', border: '4px solid #eee', borderTopColor: '#000080', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px auto' }}></div>
+            <h2 style={{ color: '#000080', marginBottom: '10px', fontFamily: 'Georgia, serif' }}>Processing Submission</h2>
+            <p style={{ color: '#555', fontSize: '0.9rem' }}>Securely transmitting encrypted data and video logs to the server. Do not close this window.</p>
+            <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+          </div>
         </div>
       </div>
     );
@@ -450,12 +451,16 @@ const PublicQuiz = () => {
 
   if (stage === 'done') {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-        <div style={{ background: 'white', padding: '50px', borderRadius: '24px', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.08)', maxWidth: '500px' }}>
-          <CheckCircle size={80} color="#10b981" style={{ margin: '0 auto 20px auto' }} />
-          <h2 style={{ color: '#1e293b', fontSize: '2rem', marginBottom: '15px' }}>Thank you!</h2>
-          <p style={{ color: '#475569', fontSize: '1.1rem', lineHeight: '1.6' }}>Your participation is completed successfully and your secure recordings have been saved.</p>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '20px' }}>You may now close this window safely.</p>
+      <div style={containerStyle}>
+        <OfficialHeader />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ ...cardStyle, textAlign: 'center', maxWidth: '600px' }}>
+            <CheckCircle size={60} color="#138808" style={{ margin: '0 auto 20px auto' }} />
+            <h2 style={{ color: '#000080', fontSize: '1.6rem', marginBottom: '15px', fontFamily: 'Georgia, serif' }}>Submission Successful</h2>
+            <div style={{ width: '60px', height: '3px', background: '#138808', margin: '0 auto 20px auto' }}></div>
+            <p style={{ color: '#333', fontSize: '1rem', lineHeight: '1.6' }}>Your examination data and proctoring logs have been securely submitted to the authorities.</p>
+            <p style={{ color: '#777', fontSize: '0.9rem', marginTop: '20px' }}>You may now safely close this browser window.</p>
+          </div>
         </div>
       </div>
     );
