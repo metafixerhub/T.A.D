@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award, MonitorPlay, PlayCircle } from 'lucide-react';
+import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award, MonitorPlay, PlayCircle, Download, FileText, Search, X, Paperclip } from 'lucide-react';
 import { ref, onValue, set, remove, push } from 'firebase/database';
 import { doc, getDoc, updateDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { database, auth, firestore } from '../firebaseConfig';
@@ -23,6 +23,42 @@ const AfpSubmissionItem = ({ sub, approveAfp, declineAfp }) => {
       </div>
     </div>
   );
+};
+
+const getStoryAttachments = (story) => {
+  if (Array.isArray(story.attachments) && story.attachments.length > 0) {
+    return story.attachments.map((att, i) => {
+      if (typeof att === 'string') {
+        const isPdf = att.toLowerCase().includes('.pdf');
+        return {
+          name: att.split('/').pop() || `Attachment ${i + 1}`,
+          type: isPdf ? 'pdf' : 'image',
+          url: att
+        };
+      }
+      return {
+        name: att.name || (att.url ? att.url.split('/').pop() : `Attachment ${i + 1}`),
+        type: att.type || (att.url && att.url.toLowerCase().includes('.pdf') ? 'pdf' : 'image'),
+        url: att.url || att
+      };
+    });
+  }
+  const list = [];
+  if (story.pdfUrl) {
+    list.push({
+      name: story.pdfUrl.split('/').pop() || 'Document.pdf',
+      type: 'pdf',
+      url: story.pdfUrl
+    });
+  }
+  if (story.imageUrl) {
+    list.push({
+      name: story.imageUrl.split('/').pop() || 'Image.png',
+      type: 'image',
+      url: story.imageUrl
+    });
+  }
+  return list;
 };
 
 const AdminPanel = () => {
@@ -50,6 +86,7 @@ const AdminPanel = () => {
 
   // Story states for manager
   const [stories, setStories] = useState([]);
+  const [storySearchTerm, setStorySearchTerm] = useState('');
 
   // Student Video Progress
   const [studentProgress, setStudentProgress] = useState({});
@@ -663,20 +700,174 @@ const AdminPanel = () => {
 
         {/* Story Corner Manager */}
         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '25px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#3b82f6' }}><ImageIcon /> Manage Story Corner</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Delete old Story Corner posts.</p>
-          <div style={{ display: 'grid', gap: '10px', maxHeight: '450px', overflowY: 'auto' }}>
-            {stories.map(story => (
-              <div key={story.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{new Date(story.timestamp).toLocaleString()}</span>
-                  <button onClick={() => deleteStory(story.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
-                </div>
-                <div style={{ color: '#e2e8f0', fontSize: '0.95rem' }}>{story.text}</div>
-                {story.attachments && story.attachments.length > 0 && <span style={{ color: '#3b82f6', fontSize: '0.8rem' }}>{story.attachments.length} attachment(s)</span>}
-              </div>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0, color: '#3b82f6' }}><ImageIcon /> Manage Story Corner</h3>
+            <span style={{ fontSize: '0.8rem', color: '#94a3b8', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '12px' }}>
+              {stories.length} post{stories.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>Search, download attachments, and delete Story Corner posts.</p>
+
+          {/* Search Panel */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '15px' }}>
+            <Search size={16} color="#94a3b8" />
+            <input
+              type="text"
+              value={storySearchTerm}
+              onChange={e => setStorySearchTerm(e.target.value)}
+              placeholder="Search by text, attachment name, or date..."
+              style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%', fontSize: '0.85rem' }}
+            />
+            {storySearchTerm && (
+              <button
+                onClick={() => setStorySearchTerm('')}
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                title="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gap: '12px', maxHeight: '480px', overflowY: 'auto', paddingRight: '4px' }}>
+            {stories
+              .filter(story => {
+                if (!storySearchTerm.trim()) return true;
+                const term = storySearchTerm.toLowerCase();
+                const textMatch = story.text?.toLowerCase().includes(term);
+                const dateMatch = new Date(story.timestamp).toLocaleString().toLowerCase().includes(term);
+                const atts = getStoryAttachments(story);
+                const attMatch = atts.some(a => a.name?.toLowerCase().includes(term));
+                return textMatch || dateMatch || attMatch;
+              })
+              .map(story => {
+                const attachments = getStoryAttachments(story);
+                return (
+                  <div key={story.id} style={{ background: 'rgba(0,0,0,0.35)', padding: '15px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    {/* Header Row: Date/Time + Delete Button */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        📅 {new Date(story.timestamp).toLocaleString()}
+                      </span>
+                      <button
+                        onClick={() => deleteStory(story.id)}
+                        style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', cursor: 'pointer', padding: '5px 8px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 600 }}
+                        title="Delete this post"
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
+
+                    {/* Story Text */}
+                    {story.text && (
+                      <div style={{ color: '#e2e8f0', fontSize: '0.92rem', lineHeight: '1.45', marginBottom: '10px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        {story.text}
+                      </div>
+                    )}
+
+                    {/* Attachment Summary Badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: attachments.length > 0 ? '#60a5fa' : '#64748b', fontSize: '0.8rem', fontWeight: 600, marginBottom: '8px' }}>
+                      <Paperclip size={14} />
+                      {attachments.length > 0 ? `${attachments.length} Attachment${attachments.length > 1 ? 's' : ''}` : 'No attachments'}
+                    </div>
+
+                    {/* Attachment Boxes with Name & Download Option */}
+                    {attachments.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+                        {attachments.map((att, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.04)',
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                              borderRadius: '8px',
+                              padding: '10px 12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: '12px'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                              <div style={{
+                                background: att.type === 'pdf' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                                color: att.type === 'pdf' ? '#ef4444' : '#60a5fa',
+                                padding: '6px',
+                                borderRadius: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}>
+                                {att.type === 'pdf' ? <FileText size={16} /> : <ImageIcon size={16} />}
+                              </div>
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div
+                                  style={{
+                                    color: '#f8fafc',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 600,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  title={att.name}
+                                >
+                                  {att.name}
+                                </div>
+                                <span style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                                  {att.type || 'file'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Download Button */}
+                            <a
+                              href={att.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download={att.name}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                background: '#3b82f6',
+                                color: 'white',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                fontSize: '0.78rem',
+                                fontWeight: 600,
+                                textDecoration: 'none',
+                                flexShrink: 0,
+                                cursor: 'pointer',
+                                transition: 'background 0.2s'
+                              }}
+                              onMouseOver={e => e.currentTarget.style.background = '#2563eb'}
+                              onMouseOut={e => e.currentTarget.style.background = '#3b82f6'}
+                            >
+                              <Download size={13} /> Download
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             {stories.length === 0 && <div style={{ color: '#64748b' }}>No stories found.</div>}
+            {stories.length > 0 && stories.filter(story => {
+              if (!storySearchTerm.trim()) return true;
+              const term = storySearchTerm.toLowerCase();
+              const textMatch = story.text?.toLowerCase().includes(term);
+              const dateMatch = new Date(story.timestamp).toLocaleString().toLowerCase().includes(term);
+              const atts = getStoryAttachments(story);
+              const attMatch = atts.some(a => a.name?.toLowerCase().includes(term));
+              return textMatch || dateMatch || attMatch;
+            }).length === 0 && (
+              <div style={{ color: '#94a3b8', textAlign: 'center', padding: '20px', fontSize: '0.85rem' }}>
+                No stories match "{storySearchTerm}"
+              </div>
+            )}
           </div>
         </div>
 
