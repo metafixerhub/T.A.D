@@ -154,7 +154,7 @@ app.post('/api/ai/chat', async (req, res) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "google/gemma-4-26b-a4b-it:free",
+        model: "openrouter/free",
         messages: [systemPrompt, ...messages],
         temperature: 0.7
       })
@@ -199,7 +199,7 @@ app.post('/api/ai/grade', async (req, res) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "google/gemma-4-26b-a4b-it:free",
+        model: "openrouter/free",
         response_format: { type: "json_object" },
         messages: [
           systemPrompt,
