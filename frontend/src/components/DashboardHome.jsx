@@ -12,6 +12,27 @@ const DashboardHome = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [progressStats, setProgressStats] = useState({ afpCompleted: 0, afpTotal: 10, videosWatched: 0 });
+  const [quote, setQuote] = useState({
+    text: "The beautiful thing about learning is that no one can take it away from you.",
+    author: "B.B. King"
+  });
+
+  useEffect(() => {
+    // Extract new motivational thought from free public API on every reload
+    fetch('https://dummyjson.com/quotes/random')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.quote) {
+          setQuote({
+            text: data.quote,
+            author: data.author || 'Keep pushing your limits! 🚀'
+          });
+        }
+      })
+      .catch(err => {
+        console.warn("Could not load dynamic quote, using default:", err);
+      });
+  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -305,9 +326,11 @@ const DashboardHome = () => {
           <div style={{ background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', borderRadius: '16px', padding: '25px', color: 'white', position: 'relative', overflow: 'hidden' }}>
             <div style={{ fontSize: '3rem', position: 'absolute', top: '10px', right: '20px', opacity: 0.2, fontFamily: 'serif' }}>"</div>
             <p style={{ margin: '0 0 15px 0', fontSize: '0.95rem', lineHeight: '1.5', fontStyle: 'italic', position: 'relative', zIndex: 1 }}>
-              "The beautiful thing about learning is that no one can take it away from you."
+              "{quote.text}"
             </p>
-            <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>Keep pushing your limits! 🚀</p>
+            <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
+              — {quote.author}
+            </p>
           </div>
 
         </div>

@@ -23,6 +23,9 @@ const Navbar = ({ onLoginClick }) => {
       <Link to="/materials" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem', padding: '10px 0' }}>
         <FileText size={16} /> Materials
       </Link>
+      <Link to="/notes" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#06b6d4', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem', padding: '10px 0' }}>
+        <FileText size={16} /> Notes
+      </Link>
       
       <div 
         style={{ position: 'relative' }} 

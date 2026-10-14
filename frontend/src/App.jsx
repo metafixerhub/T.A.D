@@ -16,6 +16,8 @@ import HalloG from './components/HalloG';
 import Recordings from './components/Recordings';
 import DashboardHome from './components/DashboardHome';
 import PublicQuiz from './components/PublicQuiz';
+import NotesUpload from './components/NotesUpload';
+import NotesAdmin from './components/NotesAdmin';
 
 function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -52,6 +54,18 @@ function AppContent() {
         <Routes>
           <Route path="/national/participation/know-our-india/quiz/online" element={<PublicQuiz />} />
         </Routes>
+      ) : location.pathname.startsWith('/notes') ? (
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0b1329', color: '#f8fafc' }}>
+          <Navbar onLoginClick={() => setIsLoginOpen(true)} />
+          <main className="content-wrapper" style={{ flexGrow: 1, padding: '20px 0' }}>
+            <Routes>
+              <Route path="/notes" element={<NotesUpload />} />
+              <Route path="/notes/admin" element={<NotesAdmin />} />
+            </Routes>
+          </main>
+          <Footer />
+          <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
           <Navbar onLoginClick={() => setIsLoginOpen(true)} />

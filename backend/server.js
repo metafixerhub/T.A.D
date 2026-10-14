@@ -43,6 +43,21 @@ const quizSchema = new mongoose.Schema({
 });
 const QuizSubmission = conn.model('QuizSubmission', quizSchema);
 
+// Note Schema & Model for /notes portal and secondary storage
+const noteSchema = new mongoose.Schema({
+  title: { type: String, default: 'Untitled Note' },
+  text: { type: String, default: '' },
+  filename: String,
+  originalName: String,
+  fileUrl: String,
+  fileSize: Number,
+  fileType: String,
+  secondaryClusterSynced: { type: Boolean, default: false },
+  secondaryInsertedId: String,
+  timestamp: { type: Date, default: Date.now }
+});
+const Note = conn.model('Note', noteSchema);
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -247,6 +262,95 @@ app.delete('/api/quiz-delete/:id', async (req, res) => {
   } catch (err) {
     console.error("Error deleting submission:", err);
     res.status(500).json({ error: "Failed to delete submission" });
+  }
+});
+
+// --- Notes & Secondary Storage Endpoints ---
+
+app.post('/api/notes', async (req, res) => {
+  try {
+    const { title, text, filename, originalName, fileUrl, fileSize, fileType } = req.body;
+    const newNote = new Note({
+      title: title || 'Untitled Note',
+      text: text || '',
+      filename,
+      originalName,
+      fileUrl,
+      fileSize,
+      fileType,
+      timestamp: Date.now()
+    });
+
+    // Mirror metadata to Secondary Storage Cluster (Cluster 1, NotesDB, notes)
+    try {
+      const secRes = await fetch('https://one0l-server-point-234567.onrender.com/api/external/push-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clusterIndex: 1,
+          dbName: 'NotesDB',
+          collectionName: 'notes',
+          payload: {
+            title: newNote.title,
+            text: newNote.text,
+            filename: newNote.filename,
+            originalName: newNote.originalName,
+            fileUrl: newNote.fileUrl,
+            fileSize: newNote.fileSize,
+            fileType: newNote.fileType,
+            timestamp: Date.now()
+          }
+        })
+      });
+      const secData = await secRes.json();
+      if (secData.success) {
+        newNote.secondaryClusterSynced = true;
+        newNote.secondaryInsertedId = secData.result?.insertedId;
+      }
+    } catch (secErr) {
+      console.warn("Secondary storage push error:", secErr.message);
+    }
+
+    await newNote.save();
+    res.status(201).json(newNote);
+  } catch (err) {
+    console.error("Error creating note:", err);
+    res.status(500).json({ error: "Failed to create note" });
+  }
+});
+
+app.get('/api/notes', async (req, res) => {
+  try {
+    const notes = await Note.find().sort({ timestamp: -1 });
+    res.json(notes);
+  } catch (err) {
+    console.error("Error fetching notes:", err);
+    res.status(500).json({ error: "Failed to fetch notes" });
+  }
+});
+
+app.delete('/api/notes/:id', async (req, res) => {
+  try {
+    const note = await Note.findById(req.params.id);
+    if (!note) return res.status(404).json({ error: "Note not found" });
+
+    // Clean up GridFS file if exists
+    if (gridfsBucket && note.filename) {
+      try {
+        const files = await gridfsBucket.find({ filename: note.filename }).toArray();
+        if (files && files.length > 0) {
+          await gridfsBucket.delete(files[0]._id);
+        }
+      } catch (gErr) {
+        console.warn("GridFS cleanup error:", gErr.message);
+      }
+    }
+
+    await Note.findByIdAndDelete(req.params.id);
+    res.json({ message: "Note deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting note:", err);
+    res.status(500).json({ error: "Failed to delete note" });
   }
 });
 

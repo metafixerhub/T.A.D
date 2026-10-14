@@ -110,6 +110,7 @@ const Dashboard = ({ isPasskey: propPasskey }) => {
     { name: 'Assignments (AFP)', icon: <HelpCircle size={18} />, path: '/dashboard/afp' },
     { name: 'Final Project', icon: <Award size={18} />, path: '/dashboard/project' },
     { name: 'Leaderboard', icon: <Trophy size={18} />, path: '/dashboard/leaderboard' },
+    { name: 'Notes Portal', icon: <FileText size={18} />, path: '/notes' },
   ];
 
   return (
