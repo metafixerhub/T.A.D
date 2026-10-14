@@ -250,5 +250,55 @@ app.delete('/api/quiz-delete/:id', async (req, res) => {
   }
 });
 
+// Storage Usage Statistics Endpoint
+app.get('/api/storage-stats', async (req, res) => {
+  try {
+    let mongoUsedBytes = 0;
+    let gridfsFilesCount = 0;
+
+    if (gridfsBucket) {
+      try {
+        const files = await gridfsBucket.find().toArray();
+        gridfsFilesCount = files.length;
+        mongoUsedBytes += files.reduce((acc, f) => acc + (f.length || f.metadata?.size || 0), 0);
+      } catch (err) {
+        console.warn("GridFS count error:", err.message);
+      }
+    }
+
+    try {
+      const quizCount = await QuizSubmission.countDocuments();
+      mongoUsedBytes += quizCount * 2048; // ~2KB per quiz submission
+    } catch (err) {
+      console.warn("Quiz count error:", err.message);
+    }
+
+    if (conn.db) {
+      try {
+        const stats = await conn.db.stats();
+        if (stats.dataSize || stats.storageSize) {
+          mongoUsedBytes = Math.max(mongoUsedBytes, stats.storageSize || stats.dataSize);
+        }
+      } catch (e) {
+        // Fallback to calculated mongoUsedBytes
+      }
+    }
+
+    // Atlas Free Tier = 512 MB
+    const mongoTotalBytes = 512 * 1024 * 1024;
+
+    res.json({
+      mongodb: {
+        usedBytes: mongoUsedBytes,
+        totalBytes: mongoTotalBytes,
+        filesCount: gridfsFilesCount
+      }
+    });
+  } catch (err) {
+    console.error("Storage stats error:", err);
+    res.status(500).json({ error: "Failed to fetch storage stats" });
+  }
+});
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server started on port ${port}`));

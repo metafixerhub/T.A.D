@@ -20,7 +20,8 @@ import PublicQuiz from './components/PublicQuiz';
 function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const location = useLocation();
-  const isDashboard = location.pathname.startsWith('/dashboard');
+  const isPasskeyRoute = location.pathname.startsWith('/admin/passkey');
+  const isDashboard = location.pathname.startsWith('/dashboard') || isPasskeyRoute;
 
   return (
     <>
@@ -39,6 +40,10 @@ function AppContent() {
               <Route path="project" element={<Project />} />
               <Route path="certificate" element={<Certificate />} />
               <Route path="recordings" element={<Recordings />} />
+            </Route>
+            {/* Direct Admin Passkey Route (No Password, No Login Required) */}
+            <Route path="/admin/passkey" element={<Dashboard isPasskey={true} />}>
+              <Route index element={<AdminPanel isPasskey={true} />} />
             </Route>
           </Routes>
           <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />

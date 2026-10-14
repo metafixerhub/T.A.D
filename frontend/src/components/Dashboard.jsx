@@ -9,9 +9,10 @@ import { ref, onValue } from 'firebase/database';
 import { auth, database } from '../firebaseConfig';
 import { formatDistanceToNow } from 'date-fns';
 
-const Dashboard = () => {
+const Dashboard = ({ isPasskey: propPasskey }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const isPasskey = propPasskey || location.pathname.startsWith('/admin/passkey') || sessionStorage.getItem('isPasskey') === 'true';
   
   const [user, setUser] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
@@ -31,6 +32,16 @@ const Dashboard = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    // If accessing via Passkey, bypass authentication requirement completely
+    if (isPasskey) {
+      sessionStorage.setItem('isPasskey', 'true');
+      sessionStorage.setItem('userRole', 'admin');
+      setUser({ email: 'Passkey', displayName: 'Passkey', uid: 'passkey-admin' });
+      setRole('admin');
+      setLoadingAuth(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -44,7 +55,7 @@ const Dashboard = () => {
       setLoadingAuth(false);
     });
     return () => unsubscribe();
-  }, [navigate]);
+  }, [navigate, isPasskey]);
 
   // Listen for Global Live Status & Notifications
   useEffect(() => {
@@ -80,7 +91,9 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('isPasskey');
     signOut(auth);
+    navigate('/');
   };
 
   if (loadingAuth) {
@@ -169,7 +182,7 @@ const Dashboard = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <Menu className="show-mobile" size={26} color="#e2e8f0" style={{ cursor: 'pointer' }} onClick={() => setIsSidebarOpen(true)} />
             <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#f8fafc', fontWeight: 600 }}>
-              {navLinks.find(l => l.path === location.pathname)?.name || 'Dashboard'}
+              {location.pathname.startsWith('/admin/passkey') ? 'Admin Panel' : (navLinks.find(l => l.path === location.pathname)?.name || 'Dashboard')}
             </h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -224,7 +237,7 @@ const Dashboard = () => {
                 {user.email.charAt(0).toUpperCase()}
               </div>
               <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#e2e8f0' }}>
-                {user.email.split('@')[0]}
+                {user.email === 'Passkey' ? 'Passkey /' : user.email.split('@')[0]}
               </span>
             </div>
           </div>
