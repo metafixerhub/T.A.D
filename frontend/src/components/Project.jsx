@@ -11,7 +11,7 @@ const Project = () => {
   };
 
   const prompts = [
-    { id: 1, title: 'Prompt 1', text: 'Create a futuristic cyber-tech educational website called EduVerse AI with dark blue, black, cyan, and yellow colors. Make it fully responsive and animated.' },
+    { id: 1, title: 'Prompt 1', text: 'Create a futuristic cyber-tech educational website called UNIVER-E AI with dark blue, black, cyan, and yellow colors. Make it fully responsive and animated.' },
     { id: 2, title: 'Prompt 2', text: 'Create a modern landing page with:\n- Hero section\n- Animated background\n- Feature cards\n- Join Now button\n- Login button\n- Footer' },
     { id: 3, title: 'Prompt 3', text: 'Create a responsive navigation bar:\n- Home\n- Courses\n- E-Books\n- Recordings\n- Projects\n- Dashboard\n- About\n- Contact\n- Login' },
     { id: 4, title: 'Prompt 4', text: 'Implement Google Sign-In authentication using Firebase Authentication.' },
@@ -53,7 +53,7 @@ const Project = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
             <Award size={36} color="#60a5fa" />
             <h1 style={{ margin: 0, fontSize: '2.8rem', color: 'white', fontWeight: 800, textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
-              EDUVERSE AI
+              UNIVER-E AI
             </h1>
           </div>
           <p style={{ margin: 0, color: '#93c5fd', fontSize: '1.2rem', fontWeight: 500 }}>Smart E-Learning & Coding Platform (Final Project)</p>

@@ -45,7 +45,7 @@ const LiveSession = () => {
       });
     }
 
-    const roomName = 'EduVerseLiveSessionXYZ99';
+    const roomName = 'UniverELiveSessionXYZ99';
     const jitsiUrl = `https://meet.jit.si/${roomName}#userInfo.displayName="${currentUserAlias}"`;
     window.open(jitsiUrl, '_blank');
   };

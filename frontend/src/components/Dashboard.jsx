@@ -129,7 +129,7 @@ const Dashboard = ({ isPasskey: propPasskey }) => {
         <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src="/logo.png" alt="Logo" style={{ height: '30px', width: '30px', objectFit: 'contain' }} onError={e => e.target.style.display='none'} />
-            <span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#ffffff', letterSpacing: '1px' }}>EDUVERSE</span>
+            <span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#ffffff', letterSpacing: '1px' }}>UNIVER-E</span>
           </div>
           <X className="show-mobile" size={24} color="#94a3b8" style={{ cursor: 'pointer' }} onClick={() => setIsSidebarOpen(false)} />
         </div>

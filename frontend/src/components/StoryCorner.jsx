@@ -26,7 +26,7 @@ const StoryCorner = () => {
       <div style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', padding: '40px', borderRadius: '24px', color: 'white', marginBottom: '40px', boxShadow: '0 10px 30px rgba(59,130,246,0.3)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'relative', zIndex: 1 }}>
           <h1 style={{ margin: '0 0 10px 0', fontSize: '2.5rem', fontWeight: 800 }}>Story Corner</h1>
-          <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>Discover the latest updates, announcements, and visual stories from the EduVerse team.</p>
+          <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>Discover the latest updates, announcements, and visual stories from the UNIVER-E team.</p>
         </div>
         <ImageIcon size={150} color="rgba(255,255,255,0.1)" style={{ position: 'absolute', right: '-20px', bottom: '-40px', transform: 'rotate(-15deg)' }} />
       </div>
