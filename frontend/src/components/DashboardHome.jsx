@@ -100,6 +100,7 @@ const DashboardHome = () => {
   }, []);
 
   const quickLinks = [
+    { title: 'Center Pre-Exam', subtitle: '80 Marks Test (14-Nov-26)', icon: <Award size={20} color="#38bdf8" />, bg: 'rgba(56,189,248,0.15)', path: '/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26' },
     { title: 'Live Session', subtitle: 'Join live classes', icon: <MonitorPlay size={20} color="#ef4444" />, bg: 'rgba(239,68,68,0.1)', path: '/dashboard/live' },
     { title: 'Practice Quiz', subtitle: 'Test your skills', icon: <HelpCircle size={20} color="#8b5cf6" />, bg: 'rgba(139,92,246,0.1)', path: '/dashboard/afp' },
     { title: 'Recordings', subtitle: 'Study resources', icon: <Video size={20} color="#10b981" />, bg: 'rgba(16,185,129,0.1)', path: '/dashboard/recordings' },
@@ -145,6 +146,33 @@ const DashboardHome = () => {
           <span style={{ fontSize: '3rem', fontWeight: 800, color: '#3b82f6', lineHeight: '1' }}>{xp}</span>
           <Trophy size={20} color="#f59e0b" style={{ marginTop: '5px' }} />
         </div>
+      </div>
+
+      {/* Center Pre-Exam Official Assessment Banner */}
+      <div
+        onClick={() => navigate('/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26')}
+        style={{
+          borderRadius: '20px',
+          overflow: 'hidden',
+          cursor: 'pointer',
+          border: '1.5px solid rgba(59, 130, 246, 0.4)',
+          boxShadow: '0 12px 30px -5px rgba(0, 0, 0, 0.5), 0 0 25px rgba(59, 130, 246, 0.15)',
+          transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-3px)';
+          e.currentTarget.style.boxShadow = '0 18px 40px -5px rgba(0, 0, 0, 0.6), 0 0 35px rgba(59, 130, 246, 0.3)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'none';
+          e.currentTarget.style.boxShadow = '0 12px 30px -5px rgba(0, 0, 0, 0.5), 0 0 25px rgba(59, 130, 246, 0.15)';
+        }}
+      >
+        <img
+          src="/pre-exam-banner.png"
+          alt="I REMEMBER TEST - Pre-exams Recommended by the Center (14-Nov-26)"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        />
       </div>
 
       {/* 2. QUICK ACCESS GRID */}

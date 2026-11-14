@@ -783,19 +783,29 @@ const AdminPanel = (props) => {
 
       {/* Center Pre-Exams Assessment Quick Portal Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%)',
+        background: 'rgba(15, 23, 42, 0.75)',
         border: '1px solid rgba(59, 130, 246, 0.3)',
-        borderRadius: '16px',
-        padding: '24px 28px',
+        borderRadius: '20px',
+        overflow: 'hidden',
         marginBottom: '35px',
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '20px'
+        boxShadow: '0 15px 35px -10px rgba(0, 0, 0, 0.5)'
       }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+        <div style={{ width: '100%', maxHeight: '240px', overflow: 'hidden' }}>
+          <img
+            src="/pre-exam-banner.png"
+            alt="I Remember Test Banner"
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
+        </div>
+        <div style={{
+          padding: '20px 24px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px'
+        }}>
+          <div>
             <span style={{
               background: 'rgba(59, 130, 246, 0.25)',
               color: '#93c5fd',
@@ -808,54 +818,49 @@ const AdminPanel = (props) => {
               <ShieldCheck size={12} style={{ display: 'inline', marginRight: '4px' }} />
               Open Center Evaluation Portal (No Password Required)
             </span>
+            <p style={{ margin: '6px 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
+              Inspect candidate scores, percentage, and question-by-question (Q1-Q37) correct vs wrong breakdowns.
+            </p>
           </div>
-          <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#f8fafc', fontWeight: 800 }}>
-            I REMEMBER TEST · Pre-exams Recommended by the Center (14-Nov-26)
-          </h3>
-          <p style={{ margin: '6px 0 0 0', color: '#94a3b8', fontSize: '0.9rem' }}>
-            Inspect candidate scores, percentage, and question-by-question (Q1-Q37) correct vs wrong breakdowns.
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <Link
-            to="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26/admin"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: '#2563eb',
-              color: '#ffffff',
-              padding: '12px 20px',
-              borderRadius: '10px',
-              textDecoration: 'none',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              boxShadow: '0 4px 15px rgba(37, 99, 235, 0.4)'
-            }}
-          >
-            Open Test Score Records <ChevronRight size={16} />
-          </Link>
-
-          <Link
-            to="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26"
-            target="_blank"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: '#e2e8f0',
-              padding: '12px 18px',
-              borderRadius: '10px',
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '0.9rem'
-            }}
-          >
-            Launch Test Portal ↗
-          </Link>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link
+              to="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26/admin"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#2563eb',
+                color: '#ffffff',
+                padding: '10px 18px',
+                borderRadius: '10px',
+                textDecoration: 'none',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                boxShadow: '0 4px 15px rgba(37, 99, 235, 0.4)'
+              }}
+            >
+              Open Test Score Records <ChevronRight size={16} />
+            </Link>
+            <Link
+              to="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26"
+              target="_blank"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: '#e2e8f0',
+                padding: '10px 16px',
+                borderRadius: '10px',
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.85rem'
+              }}
+            >
+              Launch Test Portal ↗
+            </Link>
+          </div>
         </div>
       </div>
 

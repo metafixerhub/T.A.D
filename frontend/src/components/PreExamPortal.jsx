@@ -322,214 +322,132 @@ export default function PreExamPortal() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px 16px',
+        padding: '32px 16px',
         fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
       }}>
         <div style={{
-          maxWidth: '720px',
+          maxWidth: '860px',
           width: '100%',
           background: 'rgba(17, 24, 39, 0.85)',
           backdropFilter: 'blur(16px)',
           border: '1px solid rgba(59, 130, 246, 0.3)',
           borderRadius: '24px',
-          padding: '40px 32px',
+          padding: '28px',
           boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(59, 130, 246, 0.15)'
         }}>
-          {/* Header Badge */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 16px',
-              borderRadius: '9999px',
-              background: 'rgba(59, 130, 246, 0.15)',
-              border: '1px solid rgba(59, 130, 246, 0.4)',
-              color: '#60a5fa',
-              fontSize: '13px',
-              fontWeight: 600,
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase'
-            }}>
-              <ShieldCheck size={16} /> Official Center Assessment · {PRE_EXAM_METADATA.date}
-            </span>
-          </div>
-
-          <h1 style={{
-            fontSize: '32px',
-            fontWeight: 800,
-            textAlign: 'center',
-            marginBottom: '8px',
-            background: 'linear-gradient(135deg, #ffffff 0%, #93c5fd 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            letterSpacing: '-0.02em'
-          }}>
-            {PRE_EXAM_METADATA.title}
-          </h1>
-
-          <p style={{
-            textAlign: 'center',
-            color: '#94a3b8',
-            fontSize: '16px',
-            marginBottom: '32px'
-          }}>
-            {PRE_EXAM_METADATA.subtitle}
-          </p>
-
-          {/* Overview Cards */}
+          
+          {/* Official Center Banner Image */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-            gap: '12px',
-            marginBottom: '32px'
+            borderRadius: '18px',
+            overflow: 'hidden',
+            marginBottom: '28px',
+            border: '1px solid rgba(59, 130, 246, 0.35)',
+            boxShadow: '0 12px 35px -5px rgba(0, 0, 0, 0.6), 0 0 25px rgba(59, 130, 246, 0.2)'
           }}>
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
-              padding: '16px',
-              textAlign: 'center'
-            }}>
-              <div style={{ color: '#38bdf8', fontSize: '24px', fontWeight: 700 }}>80</div>
-              <div style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginTop: '4px' }}>Total Marks</div>
-            </div>
-
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
-              padding: '16px',
-              textAlign: 'center'
-            }}>
-              <div style={{ color: '#a855f7', fontSize: '24px', fontWeight: 700 }}>37</div>
-              <div style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginTop: '4px' }}>Questions</div>
-            </div>
-
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
-              padding: '16px',
-              textAlign: 'center'
-            }}>
-              <div style={{ color: '#10b981', fontSize: '24px', fontWeight: 700 }}>Instant</div>
-              <div style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginTop: '4px' }}>Evaluation</div>
-            </div>
-
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '16px',
-              padding: '16px',
-              textAlign: 'center'
-            }}>
-              <div style={{ color: '#f59e0b', fontSize: '24px', fontWeight: 700 }}>AI + Voice</div>
-              <div style={{ color: '#94a3b8', fontSize: '12px', textTransform: 'uppercase', marginTop: '4px' }}>Speech Assist</div>
-            </div>
-          </div>
-
-          {/* Marking Structure Notice */}
-          <div style={{
-            background: 'rgba(15, 23, 42, 0.7)',
-            borderLeft: '4px solid #3b82f6',
-            borderRadius: '0 12px 12px 0',
-            padding: '16px 20px',
-            marginBottom: '32px'
-          }}>
-            <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '14px', marginBottom: '6px' }}>
-              Center Marking Scheme (Exact 80 Marks):
-            </div>
-            <div style={{ color: '#94a3b8', fontSize: '13px', lineHeight: '1.6' }}>
-              • <strong>Q1 – Q6:</strong> 3 Marks each = <strong>18 Marks</strong><br />
-              • <strong>Q7 – Q37:</strong> 2 Marks each = <strong>62 Marks</strong><br />
-              • <strong>Features:</strong> Instant answer checking, interactive Hints, AI Deep Tutor explanations, and Voice/Speaker audio options.
-            </div>
-          </div>
-
-          {/* Candidate Name Form */}
-          <form onSubmit={handleStartExam}>
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: '#cbd5e1',
-                marginBottom: '8px'
-              }}>
-                Candidate Full Name <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <input
-                type="text"
-                value={candidateName}
-                onChange={(e) => {
-                  setCandidateName(e.target.value);
-                  if (nameError) setNameError('');
-                }}
-                placeholder="Enter your full name to start..."
-                autoFocus
-                style={{
-                  width: '100%',
-                  padding: '14px 18px',
-                  borderRadius: '12px',
-                  background: 'rgba(15, 23, 42, 0.8)',
-                  border: nameError ? '1px solid #ef4444' : '1px solid rgba(255, 255, 255, 0.15)',
-                  color: '#ffffff',
-                  fontSize: '16px',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  transition: 'border 0.2s, box-shadow 0.2s'
-                }}
-              />
-              {nameError && (
-                <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <AlertCircle size={14} /> {nameError}
-                </div>
-              )}
-            </div>
-
-            <button
-              type="submit"
+            <img
+              src="/pre-exam-banner.png"
+              alt="I REMEMBER TEST - Pre-exams Recommended by the Center (14-Nov-26)"
               style={{
                 width: '100%',
-                padding: '16px 24px',
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                color: '#ffffff',
-                fontSize: '17px',
-                fontWeight: 700,
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                boxShadow: '0 10px 25px -5px rgba(37, 99, 235, 0.5)',
-                transition: 'all 0.2s ease'
+                height: 'auto',
+                display: 'block'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-            >
-              Start Exam Now <ArrowRight size={20} />
-            </button>
-          </form>
-
-          {/* Footer Link to Admin Controller */}
-          <div style={{ marginTop: '28px', textAlign: 'center' }}>
-            <Link
-              to="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26/admin"
-              style={{
-                color: '#64748b',
-                fontSize: '13px',
-                textDecoration: 'none',
-                transition: 'color 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#94a3b8'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
-            >
-              Center Administration Portal (Score Records) →
-            </Link>
+            />
           </div>
+
+          {/* Candidate Name Form Box */}
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.75)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '16px',
+            padding: '24px 28px'
+          }}>
+            <form onSubmit={handleStartExam}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  color: '#e2e8f0',
+                  marginBottom: '10px'
+                }}>
+                  Candidate Full Name <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={candidateName}
+                  onChange={(e) => {
+                    setCandidateName(e.target.value);
+                    if (nameError) setNameError('');
+                  }}
+                  placeholder="Enter candidate full name to begin the assessment..."
+                  autoFocus
+                  style={{
+                    width: '100%',
+                    padding: '16px 20px',
+                    borderRadius: '12px',
+                    background: 'rgba(10, 16, 30, 0.9)',
+                    border: nameError ? '1.5px solid #ef4444' : '1px solid rgba(59, 130, 246, 0.4)',
+                    color: '#ffffff',
+                    fontSize: '16px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.4)',
+                    transition: 'border 0.2s, box-shadow 0.2s'
+                  }}
+                />
+                {nameError && (
+                  <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <AlertCircle size={15} /> {nameError}
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  padding: '16px 24px',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                  color: '#ffffff',
+                  fontSize: '17px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  boxShadow: '0 10px 25px -5px rgba(37, 99, 235, 0.5)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                Start Examination Now <ArrowRight size={20} />
+              </button>
+            </form>
+
+            {/* Footer Link to Admin Controller */}
+            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+              <Link
+                to="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26/admin"
+                style={{
+                  color: '#64748b',
+                  fontSize: '13px',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  transition: 'color 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#93c5fd'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+              >
+                Center Administration Portal (Candidate Score Records) →
+              </Link>
+            </div>
+          </div>
+
         </div>
       </div>
     );

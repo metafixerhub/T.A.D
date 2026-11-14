@@ -133,6 +133,25 @@ export default function PreExamAdmin() {
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
+        {/* Official Assessment Banner */}
+        <div style={{
+          borderRadius: '18px',
+          overflow: 'hidden',
+          marginBottom: '24px',
+          border: '1px solid rgba(59, 130, 246, 0.35)',
+          boxShadow: '0 12px 35px -5px rgba(0, 0, 0, 0.6), 0 0 25px rgba(59, 130, 246, 0.15)'
+        }}>
+          <img
+            src="/pre-exam-banner.png"
+            alt="I REMEMBER TEST - Pre-exams Recommended by the Center (14-Nov-26)"
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block'
+            }}
+          />
+        </div>
+
         {/* Top Navbar Header */}
         <div style={{
           display: 'flex',
