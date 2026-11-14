@@ -18,6 +18,8 @@ import DashboardHome from './components/DashboardHome';
 import PublicQuiz from './components/PublicQuiz';
 import NotesUpload from './components/NotesUpload';
 import NotesAdmin from './components/NotesAdmin';
+import PreExamPortal from './components/PreExamPortal';
+import PreExamAdmin from './components/PreExamAdmin';
 
 function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -54,6 +56,18 @@ function AppContent() {
         <Routes>
           <Route path="/national/participation/know-our-india/quiz/online" element={<PublicQuiz />} />
         </Routes>
+      ) : location.pathname.startsWith('/test') ? (
+        <Routes>
+          <Route path="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26/admin" element={<PreExamAdmin />} />
+          <Route path="/test/001-haited/-pre-exams-recommended-by-the-center/14-nov-26/admin" element={<PreExamAdmin />} />
+          <Route path="/test/14-nov-26/admin" element={<PreExamAdmin />} />
+          <Route path="/test/admin" element={<PreExamAdmin />} />
+          <Route path="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26" element={<PreExamPortal />} />
+          <Route path="/test/001-haited/-pre-exams-recommended-by-the-center/14-nov-26" element={<PreExamPortal />} />
+          <Route path="/test/14-nov-26" element={<PreExamPortal />} />
+          <Route path="/test" element={<PreExamPortal />} />
+          <Route path="/test/*" element={<PreExamPortal />} />
+        </Routes>
       ) : location.pathname.startsWith('/notes') ? (
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0b1329', color: '#f8fafc' }}>
           <Navbar onLoginClick={() => setIsLoginOpen(true)} />
@@ -80,7 +94,7 @@ function AppContent() {
       )}
       
       {/* Global AI Chatbot */}
-      {!location.pathname.startsWith('/national/participation/know-our-india') && <HalloG />}
+      {!location.pathname.startsWith('/national/participation/know-our-india') && !location.pathname.startsWith('/test') && <HalloG />}
     </>
   );
 }

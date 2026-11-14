@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award, MonitorPlay, PlayCircle, Download, FileText, Search, X, Paperclip, Database, HardDrive, RefreshCw } from 'lucide-react';
+import { useLocation, Link } from 'react-router-dom';
+import { ShieldAlert, Trash2, Send, Image as ImageIcon, MessageSquare, AlertTriangle, Award, MonitorPlay, PlayCircle, Download, FileText, Search, X, Paperclip, Database, HardDrive, RefreshCw, CheckCircle2, ChevronRight, ShieldCheck } from 'lucide-react';
 import { ref, onValue, set, remove, push } from 'firebase/database';
 import { doc, getDoc, updateDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { database, auth, firestore } from '../firebaseConfig';
@@ -778,6 +778,84 @@ const AdminPanel = (props) => {
             totalMB={firebaseStorage.totalMB}
             badgeText="1,024 MB Scale"
           />
+        </div>
+      </div>
+
+      {/* Center Pre-Exams Assessment Quick Portal Banner */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%)',
+        border: '1px solid rgba(59, 130, 246, 0.3)',
+        borderRadius: '16px',
+        padding: '24px 28px',
+        marginBottom: '35px',
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '20px'
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <span style={{
+              background: 'rgba(59, 130, 246, 0.25)',
+              color: '#93c5fd',
+              padding: '3px 10px',
+              borderRadius: '9999px',
+              fontSize: '11px',
+              fontWeight: 700,
+              textTransform: 'uppercase'
+            }}>
+              <ShieldCheck size={12} style={{ display: 'inline', marginRight: '4px' }} />
+              Open Center Evaluation Portal (No Password Required)
+            </span>
+          </div>
+          <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#f8fafc', fontWeight: 800 }}>
+            I REMEMBER TEST · Pre-exams Recommended by the Center (14-Nov-26)
+          </h3>
+          <p style={{ margin: '6px 0 0 0', color: '#94a3b8', fontSize: '0.9rem' }}>
+            Inspect candidate scores, percentage, and question-by-question (Q1-Q37) correct vs wrong breakdowns.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <Link
+            to="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26/admin"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#2563eb',
+              color: '#ffffff',
+              padding: '12px 20px',
+              borderRadius: '10px',
+              textDecoration: 'none',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              boxShadow: '0 4px 15px rgba(37, 99, 235, 0.4)'
+            }}
+          >
+            Open Test Score Records <ChevronRight size={16} />
+          </Link>
+
+          <Link
+            to="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26"
+            target="_blank"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#e2e8f0',
+              padding: '12px 18px',
+              borderRadius: '10px',
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: '0.9rem'
+            }}
+          >
+            Launch Test Portal ↗
+          </Link>
         </div>
       </div>
 

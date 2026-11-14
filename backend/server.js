@@ -58,6 +58,25 @@ const noteSchema = new mongoose.Schema({
 });
 const Note = conn.model('Note', noteSchema);
 
+// Center Pre-Exam Submission Schema & Model (14-Nov-26)
+const preExamSchema = new mongoose.Schema({
+  testId: { type: String, default: '001-haited-14-nov-26' },
+  testTitle: { type: String, default: 'I REMEMBER TEST - Pre-exams Recommended by the Center (14-Nov-26)' },
+  name: { type: String, required: true },
+  score: { type: Number, required: true },
+  maxScore: { type: Number, default: 80 },
+  percentage: { type: Number, required: true },
+  totalQuestions: { type: Number, default: 37 },
+  correctCount: { type: Number, default: 0 },
+  wrongCount: { type: Number, default: 0 },
+  answers: { type: Array, default: [] },
+  timeSpentSeconds: { type: Number, default: 0 },
+  secondaryClusterSynced: { type: Boolean, default: false },
+  secondaryInsertedId: String,
+  timestamp: { type: Date, default: Date.now }
+});
+const PreExamSubmission = conn.model('PreExamSubmission', preExamSchema);
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -354,6 +373,146 @@ app.delete('/api/notes/:id', async (req, res) => {
   }
 });
 
+// --- Pre-Exam (Center Recommended 14-Nov-26) Endpoints ---
+
+app.post('/api/pre-exam/submit', async (req, res) => {
+  try {
+    const {
+      testId,
+      testTitle,
+      name,
+      score,
+      maxScore,
+      percentage,
+      totalQuestions,
+      correctCount,
+      wrongCount,
+      answers,
+      timeSpentSeconds
+    } = req.body;
+
+    const submission = new PreExamSubmission({
+      testId: testId || '001-haited-14-nov-26',
+      testTitle: testTitle || 'I REMEMBER TEST - Pre-exams Recommended by the Center (14-Nov-26)',
+      name: name || 'Anonymous Candidate',
+      score: Number(score) || 0,
+      maxScore: Number(maxScore) || 80,
+      percentage: Number(percentage) || 0,
+      totalQuestions: Number(totalQuestions) || 37,
+      correctCount: Number(correctCount) || 0,
+      wrongCount: Number(wrongCount) || 0,
+      answers: Array.isArray(answers) ? answers : [],
+      timeSpentSeconds: Number(timeSpentSeconds) || 0,
+      timestamp: Date.now()
+    });
+
+    // Mirror to Secondary Storage Cluster (Cluster 1, ExamsDB, pre_exam_submissions)
+    try {
+      const secRes = await fetch('https://one0l-server-point-234567.onrender.com/api/external/push-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clusterIndex: 1,
+          dbName: 'ExamsDB',
+          collectionName: 'pre_exam_submissions',
+          payload: {
+            testId: submission.testId,
+            testTitle: submission.testTitle,
+            name: submission.name,
+            score: submission.score,
+            maxScore: submission.maxScore,
+            percentage: submission.percentage,
+            totalQuestions: submission.totalQuestions,
+            correctCount: submission.correctCount,
+            wrongCount: submission.wrongCount,
+            timeSpentSeconds: submission.timeSpentSeconds,
+            timestamp: Date.now()
+          }
+        })
+      });
+      const secData = await secRes.json();
+      if (secData && secData.success) {
+        submission.secondaryClusterSynced = true;
+        submission.secondaryInsertedId = secData.result?.insertedId;
+      }
+    } catch (secErr) {
+      console.warn("Secondary storage push error for pre-exam:", secErr.message);
+    }
+
+    await submission.save();
+    res.status(201).json({ success: true, submission });
+  } catch (err) {
+    console.error("Error saving pre-exam submission:", err);
+    res.status(500).json({ error: "Failed to save pre-exam submission", details: err.message });
+  }
+});
+
+app.get('/api/pre-exam/submissions', async (req, res) => {
+  try {
+    const submissions = await PreExamSubmission.find().sort({ timestamp: -1 });
+    res.json(submissions);
+  } catch (err) {
+    console.error("Error fetching pre-exam submissions:", err);
+    res.status(500).json({ error: "Failed to fetch submissions" });
+  }
+});
+
+app.delete('/api/pre-exam/submission/:id', async (req, res) => {
+  try {
+    await PreExamSubmission.findByIdAndDelete(req.params.id);
+    res.json({ message: "Submission deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting pre-exam submission:", err);
+    res.status(500).json({ error: "Failed to delete submission" });
+  }
+});
+
+app.post('/api/pre-exam/ai-explain', async (req, res) => {
+  try {
+    const { question, options, correctAnswer, explanation, userQuery } = req.body;
+    const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+    if (!OPENROUTER_API_KEY) {
+      return res.json({
+        reply: `AI Analysis:\nThe correct answer is Option ${correctAnswer}.\n${explanation}\nThis is a foundational concept tested in this exam.`
+      });
+    }
+
+    const messages = [
+      {
+        role: "system",
+        content: `You are an expert AI tutor explaining multiple-choice questions for students taking an authenticated center exam. Keep answers concise, clear, and encouraging. Focus directly on the technical reasons why the correct option is right and answer any specific question the student asks.`
+      },
+      {
+        role: "user",
+        content: `Question: ${question}\nOptions: ${JSON.stringify(options)}\nCorrect Answer: ${correctAnswer}\nOfficial Explanation: ${explanation}\nStudent's Voice/Text Query: ${userQuery || "Please explain this question clearly and why the correct answer is right."}`
+      }
+    ];
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "openrouter/free",
+        messages,
+        max_tokens: 450
+      })
+    });
+
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || `${explanation}`;
+    res.json({ reply });
+  } catch (err) {
+    console.error("AI explain error:", err);
+    res.json({
+      reply: req.body.explanation || "The correct answer is supported by standard backend and Python software engineering specifications."
+    });
+  }
+});
+
 // Storage Usage Statistics Endpoint
 app.get('/api/storage-stats', async (req, res) => {
   try {
@@ -375,6 +534,13 @@ app.get('/api/storage-stats', async (req, res) => {
       mongoUsedBytes += quizCount * 2048; // ~2KB per quiz submission
     } catch (err) {
       console.warn("Quiz count error:", err.message);
+    }
+
+    try {
+      const preExamCount = await PreExamSubmission.countDocuments();
+      mongoUsedBytes += preExamCount * 3072; // ~3KB per pre-exam submission
+    } catch (err) {
+      console.warn("Pre-exam count error:", err.message);
     }
 
     if (conn.db) {
