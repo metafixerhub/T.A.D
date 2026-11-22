@@ -81,11 +81,11 @@ function AppContent() {
           <LoginBar isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#070d1e' }}>
           <Navbar onLoginClick={() => setIsLoginOpen(true)} />
-          <main className="content-wrapper" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <main className="content-wrapper" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
             <Routes>
-              <Route path="/" element={<HeroSection />} />
+              <Route path="/" element={<HeroSection onLoginClick={() => setIsLoginOpen(true)} />} />
             </Routes>
           </main>
           <Footer />
