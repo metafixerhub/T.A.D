@@ -9,15 +9,21 @@ const HalloG = () => {
     try {
       return JSON.parse(localStorage.getItem('hallog_messages')) || [{
         role: 'assistant',
-        content: "Hi! I'm Hallo G, your AI Web Academy teaching assistant. How can I help you learn today?"
+        content: "Hi! I'm Hello G, your HAITED AI teaching assistant. How can I help you understand code and learn today?"
       }];
     } catch {
       return [{
         role: 'assistant',
-        content: "Hi! I'm Hallo G, your AI Web Academy teaching assistant. How can I help you learn today?"
+        content: "Hi! I'm Hello G, your HAITED AI teaching assistant. How can I help you understand code and learn today?"
       }];
     }
   });
+
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-hellog', handleOpen);
+    return () => window.removeEventListener('open-hellog', handleOpen);
+  }, []);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -60,7 +66,7 @@ const HalloG = () => {
     if(window.confirm('Clear conversation history?')) {
       setMessages([{
         role: 'assistant',
-        content: "Hi! I'm Hallo G, your AI Web Academy teaching assistant. How can I help you learn today?"
+        content: "Hi! I'm Hello G, your HAITED AI teaching assistant. How can I help you understand code and learn today?"
       }]);
     }
   };
@@ -91,6 +97,8 @@ const HalloG = () => {
   if (!isOpen) {
     return (
       <button 
+        id="hellog-floating-toggle"
+        aria-label="Open Hello G AI Assistant"
         onClick={() => setIsOpen(true)}
         style={{
           position: 'fixed', bottom: '30px', right: '30px', width: '70px', height: '70px',
@@ -209,7 +217,7 @@ const HalloG = () => {
           </button>
         </form>
         <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '0.65rem', color: '#64748b' }}>
-          Powered by <strong>AI Web Academy</strong>
+          Powered by <strong>HAITED AI</strong>
         </div>
       </div>
     </div>

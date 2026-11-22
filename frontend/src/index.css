@@ -1,21 +1,22 @@
 :root {
-  font-family: 'Outfit', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;
-  color: #b0c4de;
-  /* Colors from Mockup */
-  --bg-color: #030b14;
-  color-scheme: light;
-  color: #1f2937; /* Dark charcoal text */
-  background-color: #f9fafb; /* Soft off-white */
+  color: #f8fafc;
+  --bg-color: #070d1e;
+  background-color: #070d1e;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 .glass-nav {
-  background: rgba(255, 255, 255, 0.7) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+  background: rgba(7, 13, 30, 0.88) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.25) !important;
 }
 
 body {
@@ -24,7 +25,8 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
-  background-color: #f9fafb;
+  background-color: #070d1e;
+  color: #f8fafc;
 }
 
 /* Colors */

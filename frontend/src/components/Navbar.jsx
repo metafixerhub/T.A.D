@@ -8,34 +8,50 @@ const Navbar = ({ onLoginClick }) => {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
 
+  const sectionLinks = [
+    { name: 'About', hash: '#about' },
+    { name: 'Programmes', hash: '#programmes' },
+    { name: 'Hello G', hash: '#hello-g', isAi: true },
+    { name: 'Why Choose', hash: '#why-choose' },
+    { name: 'Projects', hash: '#projects' },
+    { name: 'Certification', hash: '#certification' }
+  ];
+
   const NavItems = () => (
     <>
-      {isHomePage ? (
-        <>
-          <a href="#about" onClick={() => setIsMobileMenuOpen(false)} style={styles.navLink}>
-            About
+      {sectionLinks.map((item) => (
+        isHomePage ? (
+          <a
+            key={item.name}
+            href={item.hash}
+            onClick={() => setIsMobileMenuOpen(false)}
+            style={{
+              ...styles.navLink,
+              color: item.isAi ? '#c084fc' : '#cbd5e1',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            {item.isAi && <Sparkles size={14} />} {item.name}
           </a>
-          <a href="#programmes" onClick={() => setIsMobileMenuOpen(false)} style={styles.navLink}>
-            Programmes
-          </a>
-          <a href="#hello-g" onClick={() => setIsMobileMenuOpen(false)} style={{ ...styles.navLink, color: '#c084fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Sparkles size={14} /> Hello G
-          </a>
-          <a href="#why-choose" onClick={() => setIsMobileMenuOpen(false)} style={styles.navLink}>
-            Why Choose
-          </a>
-          <a href="#projects" onClick={() => setIsMobileMenuOpen(false)} style={styles.navLink}>
-            Projects
-          </a>
-          <a href="#certification" onClick={() => setIsMobileMenuOpen(false)} style={styles.navLink}>
-            Certification
-          </a>
-        </>
-      ) : (
-        <Link to="/" onClick={() => setIsMobileMenuOpen(false)} style={styles.navLink}>
-          Home
-        </Link>
-      )}
+        ) : (
+          <Link
+            key={item.name}
+            to={`/${item.hash}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+            style={{
+              ...styles.navLink,
+              color: item.isAi ? '#c084fc' : '#cbd5e1',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            {item.isAi && <Sparkles size={14} />} {item.name}
+          </Link>
+        )
+      ))}
 
       <Link to="/test/001-haited/-Pre-exams-recommended-by-the-center/14-nov-26" onClick={() => setIsMobileMenuOpen(false)} style={{ ...styles.navLink, color: '#38bdf8', fontWeight: 700 }}>
         Center Test
@@ -109,7 +125,7 @@ const Navbar = ({ onLoginClick }) => {
         </div>
 
         {/* Mobile Toggle */}
-        <div className="show-mobile-flex" style={{ display: 'none', alignItems: 'center', gap: '12px' }}>
+        <div className="show-mobile-flex" style={{ alignItems: 'center', gap: '12px' }}>
           <button onClick={onLoginClick} style={styles.mobileLoginBtn}>
             <LogIn size={15} />
           </button>

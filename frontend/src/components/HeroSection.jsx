@@ -9,20 +9,12 @@ import {
   ShieldCheck, 
   Code, 
   Bot, 
-  Brain, 
   CheckCircle2, 
   Award, 
-  BookOpen, 
-  Zap, 
   Flame, 
   Compass, 
-  Wrench, 
-  Rocket, 
   Check, 
   X, 
-  ExternalLink, 
-  HelpCircle, 
-  MessageSquare, 
   Volume2, 
   FileCode, 
   FolderGit2, 
@@ -31,8 +23,7 @@ import {
   Database, 
   ChevronRight,
   TrendingUp,
-  Lightbulb,
-  GraduationCap
+  Lightbulb
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -490,6 +481,37 @@ const HeroSection = ({ onLoginClick }) => {
                 </div>
               </motion.div>
 
+              {/* Floating Code Snippet Card */}
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ repeat: Infinity, duration: 5.5, ease: 'easeInOut', delay: 1.5 }}
+                style={{
+                  position: 'absolute',
+                  bottom: '-4%',
+                  left: '4%',
+                  background: 'rgba(10, 16, 32, 0.92)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  borderRadius: '16px',
+                  padding: '12px 18px',
+                  boxShadow: '0 20px 35px rgba(0, 0, 0, 0.6)',
+                  zIndex: 3,
+                  fontFamily: 'monospace',
+                  fontSize: '0.8rem',
+                  color: '#38bdf8',
+                  maxWidth: '280px'
+                }}
+              >
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+                </div>
+                <div style={{ color: '#94a3b8' }}># Future-Ready Tech</div>
+                <div><span style={{ color: '#c084fc' }}>from</span> haited <span style={{ color: '#c084fc' }}>import</span> AI, Code</div>
+                <div style={{ color: '#34d399' }}>student.master("FullStack + AI")</div>
+              </motion.div>
+
             </motion.div>
 
           </div>
@@ -916,9 +938,9 @@ const HeroSection = ({ onLoginClick }) => {
                 <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                   <button
                     onClick={() => {
-                      const chatToggle = document.querySelector('[aria-label="chat-toggle"], [title="Open Chatbot"], button');
-                      if (chatToggle) chatToggle.click();
-                      else alert("Hello G is ready! You can interact directly in the preview box or open the floating chatbot at the bottom right.");
+                      window.dispatchEvent(new Event('open-hellog'));
+                      const btn = document.getElementById('hellog-floating-toggle');
+                      if (btn) btn.click();
                     }}
                     style={{
                       display: 'inline-flex',
